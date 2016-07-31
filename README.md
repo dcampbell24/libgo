@@ -9,5 +9,5 @@ Build and view the documentation:
 
 ```sh
 $ cargo doc
-$ $BROWSER target/doc/mr_orange_learns_go/index.html
+$ $BROWSER target/doc/libgo/index.html
 ```
