@@ -1,6 +1,6 @@
 //! # libgo
 //!
-//! This library is the source of Mr. Orange's Go knowlege. It contains two sub-modules: `game` and
+//! A basic Go library that implements the Go Text Protocol. It contains two sub-modules: `game` and
 //! `gtp`. `gtp` contans logic for implementing the Go Text Protocol and `game` contains core game
 //! logic.
 

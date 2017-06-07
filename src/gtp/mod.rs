@@ -11,12 +11,12 @@ pub mod command_map;
 pub mod command_result;
 pub mod gtp_connect;
 
-/// The version of Mr. Orange.
-pub const AGENT_VERSION: &'static str = "0.2.0-dev";
+/// The library version.
+pub const AGENT_VERSION: &'static str = env!("CARGO_PKG_VERSION");
 /// The Go Text Protocol (GTP) version.
 const GTP_PROTOCOL_VERSION: &'static str = "2";
-/// This is the official name of the agent.
-const PROGRAM_NAME: &'static str = "Mr. Orange";
+/// The official name of the agent.
+const PROGRAM_NAME: &'static str = env!("CARGO_PKG_NAME");
 
 use std::collections::HashSet;
 use std::fmt::Write;
