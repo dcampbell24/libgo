@@ -8,6 +8,5 @@ basic game logic and support for the Go Text Protocol.
 Build and view the documentation:
 
 ```sh
-$ cargo doc
-$ $BROWSER target/doc/libgo/index.html
+$ cargo doc --open
 ```
