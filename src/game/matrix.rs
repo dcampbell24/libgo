@@ -58,7 +58,7 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
     }
 
     /// Returns a new empty matrix.
-    pub fn new(size: usize) -> Self {
+    pub fn with_size(size: usize) -> Self {
         Matrix {
             size: size,
             vec: vec![T::default(); size * size],

@@ -20,11 +20,20 @@ pub mod vertex;
 pub mod web;
 
 use rand::{self, Rng};
+use std::collections::HashSet;
 
 use game::board::CHINESE_KOMI;
 use game::board::{Board, Move};
 use game::player::Player;
 use game::vertex::Vertex;
+
+const DEFAULT_BOARD_SIZE: usize = 19;
+
+#[derive(Debug)]
+pub enum Handicap {
+    Fixed,
+    Free,
+}
 
 /// The time settings for a game.
 #[derive(Clone, Copy, Debug)]
@@ -56,7 +65,7 @@ impl Game {
     }
 
     /// Returns a unique reference to the game board.
-    pub fn board_mut(&mut self) -> &mut Board {
+    fn board_mut(&mut self) -> &mut Board {
         self.board_history.last_mut().expect("expected board_history to not be empty")
     }
 
@@ -101,17 +110,24 @@ impl Game {
         - self.all_legal_moves(Player::White).len() as i32
     }
 
-    /// Returns a new game.
+    /// Returns a new game with the given board size if the board size is supported, else None.
+    pub fn with_board_size(board_size: usize) -> Result<Self, String> {
+        Board::with_size(board_size).map(|board| {
+            Game {
+                player_turn: Player::Black,
+                board_history: vec![board],
+                move_history: Vec::new(),
+                komi: CHINESE_KOMI,
+                time_settings: Clock::Unlimited,
+                kgs_game_over: false,
+                rule_set: RuleSet::Chinese,
+            }
+        })
+    }
+
+    /// Returns a new game with the default board size.
     pub fn new() -> Self {
-        Game {
-            player_turn: Player::Black,
-            board_history: vec![Board::new(19)],
-            move_history: Vec::new(),
-            komi: CHINESE_KOMI,
-            time_settings: Clock::Unlimited,
-            kgs_game_over: false,
-            rule_set: RuleSet::Chinese,
-        }
+        Game::with_board_size(DEFAULT_BOARD_SIZE).unwrap()
     }
 
     fn is_legal_move(&self, mov: &Move) -> bool {
@@ -172,6 +188,67 @@ impl Game {
             self.board_history.pop();
             Ok(())
         }
+    }
+
+
+    /// Places handicap stones in fixed locations based on the number requested and the size of
+    /// the board. Fails if the board is empty or an invalid number of stones are requested.
+    pub fn place_handicap(&mut self, stones: usize, handicap: Handicap) -> Result<Vec<Vertex>, String> {
+        let mut board = self.board_mut();
+
+        if stones < 2 {
+            return Err("a handicap must be at least two stones".to_owned());
+        }
+
+        if let Handicap::Free = handicap {
+            let max_handicaps = board.size() * board.size() - 1;
+            if stones > max_handicaps {
+                return Err(format!("The number of handicaps requested must less than {}",
+                                   max_handicaps));
+            }
+        }
+
+        if !board.is_empty() {
+            return Err("board not empty".to_owned());
+        }
+        let verts = board.fixed_handicaps(stones);
+
+        if let Handicap::Fixed = handicap {
+            if stones > verts.len() {
+                return Err(format!("a board of size {} may not have more than {} fixed handicaps",
+                                    board.size(), verts.len()));
+            }
+        }
+
+        for vert in &verts {
+            board.place_stone(Player::Black, *vert);
+        }
+        Ok(verts)
+    }
+
+    /// Places the given set of verticies as handicaps on the board. Fails if any verticies are not
+    /// on the board, the board is not empty, less than two verticies are given, or so many are
+    /// given that placing them would commit whole board suicide.
+    pub fn set_free_handicap(&mut self, verts: HashSet<Vertex>) -> Result<(), String> {
+        let mut board = self.board_mut();
+
+        if verts.len() < 2 {
+            return Err("a handicap must be at least two stones".to_owned());
+        }
+        let max_handicaps = board.size() * board.size() - 1;
+        if verts.len() > max_handicaps {
+            return Err(format!("The number of handicaps requested must less than {}",
+                               max_handicaps));
+        }
+
+        for vertex in &verts {
+            if board.is_vacant(*vertex) {
+                board.place_stone(Player::Black, *vertex);
+            } else {
+                return Err(format!("{} is not on the board", vertex))
+            }
+        }
+        Ok(())
     }
 }
 

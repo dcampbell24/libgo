@@ -10,74 +10,9 @@ use game::matrix::Matrix;
 
 /// The compensation in points White gets for going second under Chinese rules.
 pub const CHINESE_KOMI: f64 = 7.5;
-const GOBAN_MAX_SIZE: usize = 19;
-const GOBAN_MIN_SIZE: usize = 1;
-const GOBAN_LETTERS: &'static str = "ABCDEFGHJKLMNOPQRST";
-
-/// Returns the center point (天元 tengen) of the board. Note that even size boards don't have a
-/// center point.
-pub fn center_point(board_size: usize) -> Option<Vertex> {
-    if board_size % 2 == 0 {
-        None
-    } else {
-        let center = board_size / 2;
-        Some(Vertex { x: center, y: center })
-    }
-}
-
-/// Returns the edge star points (星 hoshi), which are traditionally marked with a small dot on
-/// the board.
-pub fn star_points(board_size: usize) -> Vec<Vertex> {
-    if board_size < 7 {
-        return Vec::new();
-    }
-    let min_line = if board_size > 12 {
-        3
-    } else {
-        2
-    };
-    let max_line = board_size - min_line - 1;
-    let mut star_points = vec![
-        Vertex { x: min_line, y: min_line },
-        Vertex { x: max_line, y: max_line },
-        Vertex { x: min_line, y: max_line },
-        Vertex { x: max_line, y: min_line },
-    ];
-    if board_size == 7 {
-        return star_points;
-    }
-
-    let center_line = match center_point(board_size) {
-        Some(center) => center.x,
-        None => return star_points,
-    };
-
-    star_points.append(&mut vec![
-        Vertex { x: min_line, y: center_line },
-        Vertex { x: max_line, y: center_line },
-        Vertex { x: center_line, y: min_line },
-        Vertex { x: center_line, y: max_line },
-    ]);
-    star_points
-}
-
-/// Returns a list of handicap verticies given a board size and desired number of stones. The
-/// number of handicaps returned will be as large as possible given the number of valid handicaps,
-/// but may be less than requested.
-pub fn fixed_handicaps(board_size: usize, stones: usize) -> Vec<Vertex> {
-    let mut handicaps = star_points(board_size);
-    if board_size > 7 && (stones == 5 || stones == 7 || stones >= 9) {
-        handicaps.truncate(stones - 1);
-        match center_point(board_size) {
-            Some(center) => handicaps.push(center),
-            None => (),
-        }
-    } else {
-        handicaps.truncate(stones);
-    }
-    handicaps
-}
-
+const BOARD_MAX_SIZE: usize = 19;
+const BOARD_MIN_SIZE: usize = 1;
+const BOARD_LETTERS: &'static str = "ABCDEFGHJKLMNOPQRST";
 
 type Arrangement = HashMap<Vertex, WEB>;
 
@@ -90,6 +25,76 @@ pub struct Board {
 }
 
 impl Board {
+    /// Returns the center point (天元 tengen) of the board. Note that even size boards don't have a
+    /// center point.
+    pub fn center_point(&self) -> Option<Vertex> {
+        let board_size = self.size();
+
+        if board_size % 2 == 0 {
+            None
+        } else {
+            let center = board_size / 2;
+            Some(Vertex { x: center, y: center })
+        }
+    }
+
+    /// Returns the edge star points (星 hoshi), which are traditionally marked with a small dot on
+    /// the board.
+    pub fn star_points(&self) -> Vec<Vertex> {
+        let board_size = self.size();
+
+        if board_size < 7 {
+            return Vec::new();
+        }
+        let min_line = if board_size > 12 {
+            3
+        } else {
+            2
+        };
+        let max_line = board_size - min_line - 1;
+        let mut star_points = vec![
+            Vertex { x: min_line, y: min_line },
+            Vertex { x: max_line, y: max_line },
+            Vertex { x: min_line, y: max_line },
+            Vertex { x: max_line, y: min_line },
+        ];
+        if board_size == 7 {
+            return star_points;
+        }
+
+        let center_line = match self.center_point() {
+            Some(center) => center.x,
+            None => return star_points,
+        };
+
+        star_points.append(&mut vec![
+            Vertex { x: min_line, y: center_line },
+            Vertex { x: max_line, y: center_line },
+            Vertex { x: center_line, y: min_line },
+            Vertex { x: center_line, y: max_line },
+        ]);
+        star_points
+    }
+
+    /// Returns a list of handicap verticies given a board size and desired number of stones. The
+    /// number of handicaps returned will be as large as possible given the number of valid handicaps,
+    /// but may be less than requested.
+    pub fn fixed_handicaps(&self, stones: usize) -> Vec<Vertex> {
+        let board_size = self.size();
+
+        let mut handicaps = self.star_points();
+        if board_size > 7 && (stones == 5 || stones == 7 || stones >= 9) {
+            handicaps.truncate(stones - 1);
+            match self.center_point() {
+                Some(center) => handicaps.push(center),
+                None => (),
+            }
+        } else {
+            handicaps.truncate(stones);
+        }
+        handicaps
+    }
+
     /// Returns a vec that can be used for checking identity.
     pub fn identity(&self) -> &Vec<WEB> {
         self.matrix.vec()
@@ -127,11 +132,17 @@ impl Board {
         self.chains.clear();
     }
 
-    /// Returns a new empty board.
-    pub fn new(size: usize) -> Self {
-        Board {
-            matrix: Matrix::new(size),
-            chains: Chains::new(),
+    /// Creates a new board with the given size. A full size game is 19, but 13 and 9 are also
+    /// common. Returns None if the board size is not supported.
+    pub fn with_size(size: usize) -> Result<Self, String> {
+        if size < BOARD_MIN_SIZE || size > BOARD_MAX_SIZE {
+            Err(format!("Board size must be between {} and {}, but is {}.",
+                        BOARD_MIN_SIZE, BOARD_MAX_SIZE, size))
+        } else {
+            Ok(Board {
+                matrix: Matrix::with_size(size),
+                chains: Chains::new(),
+            })
         }
     }
 
@@ -168,7 +179,7 @@ impl Board {
 
     fn push_letters(&self, board: &mut String) {
         board.push_str("  ");
-        for letter in GOBAN_LETTERS.chars().take(self.matrix.size()) {
+        for letter in BOARD_LETTERS.chars().take(self.matrix.size()) {
             board.push(' ');
             board.push(letter);
         }
@@ -178,18 +189,6 @@ impl Board {
     fn add_stone(&mut self, player: Player, vertex: &Vertex) {
         self.matrix[vertex] = WEB::from(player);
         self.chains.add_stone(player, vertex);
-    }
-
-    /// Sets the size of the Go board.
-    ///
-    /// A full size game is 19, but 13 and 9 are also common sizes. This library supports sizes
-    /// from 1 to 19.
-    pub fn set_size(&mut self, size: usize) -> Result<(), String> {
-        if size < GOBAN_MIN_SIZE || size > GOBAN_MAX_SIZE {
-            return Err("invalid board size".to_owned());
-        }
-        *self = Board::new(size);
-        Ok(())
     }
 
     /// Returns the current size of the board.
@@ -212,7 +211,7 @@ impl Board {
     /// 2. The interior contains only white stones.
     /// 3. The border contains only white stones and empty intersections.
     pub fn small_enclosed_regions(&self, player: Player) -> Vec<Vec<Vertex>> {
-        let mut exterior_verts: Matrix<bool> = Matrix::new(self.size());
+        let mut exterior_verts: Matrix<bool> = Matrix::with_size(self.size());
         for chain in self.chains.iter() {
             if chain.player == player {
                 for vertex in chain.libs.iter().chain(chain.filled_libs.iter()) {
@@ -235,7 +234,7 @@ impl Board {
     /// Returns a human readable ASCII representation of the board.
     pub fn to_ascii(&self) -> String {
         let size = self.size();
-        let star_points = fixed_handicaps(size, 9);
+        let star_points = self.star_points();
         let mut board = String::new();
         self.push_letters(&mut board);
         board.push_str("\r\n");

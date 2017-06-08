@@ -23,8 +23,8 @@ use std::fmt::Write;
 use std::io::{self, BufRead};
 use std::str::FromStr;
 
-use game::Game;
-use game::board::{self, Move};
+use game::{Game, Handicap};
+use game::board::Move;
 use game::player::Player;
 use game::vertex::Vertex;
 use self::command::Command;
@@ -69,8 +69,8 @@ fn gtp_boardsize(args: &Vec<String>, game: &mut Game) -> Result<(), String> {
 
     match u32::from_str_radix(&args[0], 10) {
         Ok(size) => {
-            match game.board_mut().set_size(size as usize) {
-                Ok(_) => Ok(()),
+            match Game::with_board_size(size as usize) {
+                Ok(new_game) => { *game = new_game; Ok(()) },
                 Err(_) => Err("unacceptable size".to_owned()),
             }
         },
@@ -122,6 +122,27 @@ fn gtp_play(args: &Vec<String>, game: &mut Game) -> Result<(), String> {
     return game.play(&mov);
 }
 
+fn gtp_place_handicap(args: &Vec<String>,
+                      game: &mut Game, handicap: Handicap) -> Result<String, String> {
+
+    if args.is_empty() {
+        return Err("syntax error".to_owned());
+    }
+    let stones = match u32::from_str_radix(&args[0], 10) {
+        Ok(stones) => stones as usize,
+        Err(_) => {
+            return Err("number is not a u32".to_owned());
+        }
+    };
+    game.place_handicap(stones, handicap).map(|verts| {
+        let mut out = String::new();
+        for vert in verts.into_iter() {
+            out.push_str(&vert.to_string());
+        }
+        out
+    })
+}
+
 /// Register the GTP commands.
 pub fn register_commands() -> CommandMap {
     let mut commands: CommandMap = CommandMap::new();
@@ -142,30 +163,7 @@ pub fn register_commands() -> CommandMap {
         unimplemented!();
     });
     commands.insert("fixed_handicap", |args, game| {
-        if !game.board().is_empty() {
-            return Err("board not empty".to_owned());
-        }
-        if args.is_empty() {
-            return Err("syntax error".to_owned());
-        }
-
-        let stones = match u32::from_str_radix(&args[0], 10) {
-            Ok(stones) => stones as usize,
-            Err(_) => {
-                return Err("number is not a u32".to_owned());
-            }
-        };
-        if stones < 2 || stones > 9 {
-            return Err("invalid number of stones".to_owned());
-        }
-
-        let mut out_str = String::new();
-        let verts = board::fixed_handicaps(game.board().size(), stones);
-        for vert in &verts {
-            game.board_mut().place_stone(Player::Black, *vert);
-            write!(out_str, "{} ", vert.to_owned()).expect("failed to write handicap");
-        }
-        Ok(out_str)
+        gtp_place_handicap(args, game, Handicap::Fixed)
     });
     commands.insert("genmove", |args, game| {
         gtp_genmove(&args, game)
@@ -203,30 +201,7 @@ pub fn register_commands() -> CommandMap {
         Ok(PROGRAM_NAME.to_owned())
     });
     commands.insert("place_free_handicap", |args, game| {
-        if !game.board().is_empty() {
-            return Err("board not empty".to_owned());
-        }
-        if args.is_empty() {
-            return Err("syntax error".to_owned());
-        }
-
-        let stones = match u32::from_str_radix(&args[0], 10) {
-            Ok(stones) => stones as usize,
-            Err(_) => {
-                return Err("number is not a u32".to_owned());
-            }
-        };
-        if stones < 2 || stones > (game.board().size() * game.board().size() - 1) {
-            return Err("invalid number of stones".to_owned());
-        }
-
-        let mut out_str = String::new();
-        let verts = board::fixed_handicaps(game.board().size(), stones);
-        for vert in &verts {
-            game.board_mut().place_stone(Player::Black, *vert);
-            write!(out_str, "{} ", vert.to_owned()).expect("failed to write handicap");
-        }
-        Ok(out_str)
+        gtp_place_handicap(args, game, Handicap::Free)
     });
     commands.insert("play", |args: &Vec<String>, game: &mut Game| {
         gtp_play(&args, game).map(|_| String::new())
@@ -238,28 +213,14 @@ pub fn register_commands() -> CommandMap {
         unreachable!()
     });
     commands.insert("set_free_handicap", |args, game| {
-        if !game.board().is_empty() {
-            return Err("board not empty".to_owned());
-        }
-
         let verts: HashSet<_> = args.iter().filter_map(|s| {
             Vertex::from_str(&s.to_uppercase()).ok()
         }).collect();
-
         if verts.len() != args.len() {
-            return Err("syntax error".to_owned());
+            return Err("syntax error, repeated vertex, or pass given as argument".to_owned());
         }
 
-        if verts.len() < 2 || verts.len() > (game.board().size() * game.board().size() - 1) {
-            return Err("invalid number of stones".to_owned());
-        }
-
-        let mut out_str = String::new();
-        for vert in &verts {
-            game.board_mut().place_stone(Player::Black, *vert);
-            write!(out_str, "{} ", vert.to_owned()).expect("failed to write handicap");
-        }
-        Ok(out_str)
+        game.set_free_handicap(verts).map(|_| String::new())
     });
     commands.insert("showboard", |_args, game| {
         Ok(format!("\r\n{}", game.board()))
