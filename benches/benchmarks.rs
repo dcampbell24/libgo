@@ -8,7 +8,7 @@ extern crate libgo;
 mod tests {
     use test::Bencher;
     use libgo::game::Game;
-    use libgo::game::board::{self, Board, Move};
+    use libgo::game::board::{Board, Move};
     use libgo::game::matrix::Matrix;
     use libgo::game::player::Player;
     use libgo::game::vertex::Vertex;
@@ -30,7 +30,7 @@ mod tests {
     }
 
     fn black_checkered_matrix(size: usize) -> Matrix<WEB> {
-        let mut matrix = Matrix::new(size);
+        let mut matrix = Matrix::with_size(size);
         for y in 0 .. matrix.size() {
             for x in 0 .. matrix.size() {
                 if (y % 2 == 0 && x % 2 == 0) || (y % 2 != 0 && x % 2 != 0) {
@@ -61,7 +61,7 @@ mod tests {
     #[bench]
     fn bench_first_move_play_in_game(b: &mut Bencher) {
         let mut game = Game::new();
-        let center = board::center_point(19);
+        let center = game.board().center_point();
         let mov = Move { player: Player::Black, vertex: center };
         b.iter(|| {
             game.play(&mov).unwrap();
@@ -71,8 +71,8 @@ mod tests {
 
     #[bench]
     fn bench_first_move_play_on_board(b: &mut Bencher) {
-        let center = board::center_point(19).unwrap();
-        let empty_board = Board::new(19);
+        let empty_board = Board::with_size(19).unwrap();
+        let center = empty_board.center_point().unwrap();
         b.iter(|| {
             let mut board = empty_board.clone();
             board.place_stone(Player::Black, center);
@@ -82,7 +82,7 @@ mod tests {
     #[bench]
     fn bench_is_vacant(b: &mut Bencher) {
         let game = Game::new();
-        let center = board::center_point(19).unwrap();
+        let center = game.board().center_point().unwrap();
         b.iter(|| {
             game.board().is_vacant(center)
         });
@@ -90,7 +90,7 @@ mod tests {
 
     #[bench]
     fn bench_split_by_black_empty_board(b: &mut Bencher) {
-        let matrix = Matrix::new(19);
+        let matrix = Matrix::with_size(19);
         b.iter(|| {
             matrix.split_by_state(&WEB::Black)
         });
