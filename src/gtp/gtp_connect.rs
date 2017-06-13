@@ -6,13 +6,16 @@ use std::net::{SocketAddr, TcpStream};
 
 use game::Game;
 use gtp;
+use gtp::engine::Engine;
 use gtp::command::Command;
 
 /// Play Go as a GTP engine waiting for commands.
 ///
 /// Commands are read from stdin and responses are written to stdout.
 pub fn play_go(address: SocketAddr) {
-    let commands = gtp::register_commands();
+    let mut gtp = Engine::new();
+    gtp.register_all_commands();
+
     let mut game = Game::new();
 
     let mut stream = TcpStream::connect(address).expect("failed to bind server to address");
@@ -22,7 +25,7 @@ pub fn play_go(address: SocketAddr) {
         println!("<- {}", line);
 
         if let Some(command) = Command::from_line(&line) {
-            let result = gtp::gtp_exec(&mut game, &command, &commands);
+            let result = gtp.exec(&mut game, &command);
             let reply = gtp::command_result::display(command.id, result);
             print!("-> {}", reply);
             stream.write_all(reply.to_owned().as_bytes()).expect("failed to send reply");
