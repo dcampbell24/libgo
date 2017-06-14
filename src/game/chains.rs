@@ -2,8 +2,6 @@ use game::chain::Chain;
 use game::player::Player;
 use game::vertex::Vertex;
 
-type ChainId = usize;
-
 // All empty cells have ID 0; white and black chains have some ID > 0.
 /// A structure that maps verticies to chains.
 #[derive(Clone, Debug)]

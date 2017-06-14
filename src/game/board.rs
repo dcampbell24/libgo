@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::fmt;
 
 use game::chain::Chain;
@@ -13,8 +12,6 @@ pub const CHINESE_KOMI: f64 = 7.5;
 const BOARD_MAX_SIZE: usize = 19;
 const BOARD_MIN_SIZE: usize = 1;
 const BOARD_LETTERS: &'static str = "ABCDEFGHJKLMNOPQRST";
-
-type Arrangement = HashMap<Vertex, WEB>;
 
 /// A representation of the board state.
 #[derive(Clone)]

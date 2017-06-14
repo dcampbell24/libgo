@@ -29,9 +29,12 @@ use game::vertex::Vertex;
 
 const DEFAULT_BOARD_SIZE: usize = 19;
 
-#[derive(Debug)]
+/// Fixed or Free placement of the handicap stones.
+#[derive(Clone, Copy, Debug)]
 pub enum Handicap {
+    /// Placement of stones along the star points.
     Fixed,
+    /// Placement determined by the egine or client.
     Free,
 }
 
