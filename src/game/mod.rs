@@ -76,6 +76,7 @@ impl Game {
     pub fn clear_board(&mut self) {
         self.board_history.truncate(1);
         self.move_history.truncate(0);
+        self.board_mut().clear();
     }
 
     /// Picks a move uniform randomly from all the the possible legal moves.
@@ -206,7 +207,7 @@ impl Game {
         if let Handicap::Free = handicap {
             let max_handicaps = board.size() * board.size() - 1;
             if stones > max_handicaps {
-                return Err(format!("The number of handicaps requested must less than {}",
+                return Err(format!("The number of handicaps requested must be less than {}",
                                    max_handicaps));
             }
         }
