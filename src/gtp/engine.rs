@@ -119,7 +119,6 @@ impl Engine {
         match command.name.as_ref() {
             "list_commands" => Ok(Some(self.to_string())),
             "known_command" => Ok(Some(self.contains(command).to_string())),
-            // FIXME
             _ => self.inner.get(&command.name).map_or(Err("unknown command".to_owned()), |f| {
                 f(&command.args, &mut game)
             })
