@@ -61,8 +61,13 @@ fn gtp_place_handicap(args: &Vec<String>,
     };
     game.place_handicap(stones, handicap).map(|verts| {
         let mut out = String::new();
-        for vert in verts.into_iter() {
-            out.push_str(&vert.to_string());
+        for (index, vert) in verts.iter().enumerate() {
+            if index == 0 {
+                out.push_str(&vert.to_string());
+            } else {
+                out.push_str(" ");
+                out.push_str(&vert.to_string());
+            }
         }
         Some(out)
     })
@@ -132,7 +137,7 @@ impl Engine {
         self.inner.insert(name.to_owned(), Box::new(f));
     }
 
-    /// Returns a new CommandMap containing all of the GTP required commands.
+    /// Returns a new Self containing all of the GTP required commands.
     pub fn new() -> Self {
         let mut commands = Engine { inner: HashMap::new() };
 
@@ -257,8 +262,6 @@ impl Engine {
             game.set_free_handicap(verts).map(|_ok| None)
         });
     }
-
-
 }
 
 impl fmt::Debug for Engine {
