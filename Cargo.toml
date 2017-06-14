@@ -7,6 +7,7 @@ description = "Basic Go library that implements the Go Text Protocol."
 repository = "https://github.com/dcampbell24/libgo"
 readme = "README.md"
 keywords = ["go", "baduk", "weiqi"]
+categories = ["games"]
 license = "MIT"
 
 [dependencies]
