@@ -5,7 +5,6 @@ use std::io::BufReader;
 use std::net::{SocketAddr, TcpStream};
 
 use game::Game;
-use gtp;
 use gtp::engine::Engine;
 use gtp::command::Command;
 
@@ -25,10 +24,9 @@ pub fn play_go(address: SocketAddr) {
         println!("<- {}", line);
 
         if let Some(command) = Command::from_line(&line) {
-            let result = gtp.exec(&mut game, &command);
-            let reply = gtp::command_result::display(command.id, result);
-            print!("-> {}", reply);
-            stream.write_all(reply.to_owned().as_bytes()).expect("failed to send reply");
+            let response = gtp.exec(&mut game, &command).to_string();
+            print!("-> {}", response);
+            stream.write_all(response.as_bytes()).expect("failed to send reply");
 
             if command.name == "quit" {
                 return

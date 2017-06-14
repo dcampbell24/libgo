@@ -7,9 +7,10 @@
 pub mod command;
 /// A map from Go Text Protocol Commands to Rust functions.
 pub mod engine;
-/// The result of executing a Go Text Protocol Command.
-pub mod command_result;
+/// A module for connecting the engine to a server over a TCP connection.
 pub mod gtp_connect;
+/// The result of executing a Go Text Protocol Command.
+pub mod response;
 
 use std::io::{self, BufRead};
 
@@ -29,8 +30,8 @@ pub fn play_go() {
 
     for line in stdin.lock().lines() {
         if let Some(command) = Command::from_line(&line.expect("failed to read line")) {
-            let result = gtp.exec(&mut game, &command);
-            print!("{}", self::command_result::display(command.id, result));
+            let response = gtp.exec(&mut game, &command);
+            print!("{}", response);
 
             if command.name == "quit" {
                 return

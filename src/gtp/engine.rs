@@ -5,9 +5,9 @@ use std::str::FromStr;
 use game::{Game, Handicap};
 use game::board::Move;
 use game::player::Player;
-use game::vertex::Vertex;
+use game::vertex::{Vertex, Vertexes};
 use gtp::command::Command;
-use gtp::command_result::CommandResult;
+use gtp::response::{CommandResult, Response};
 
 /// The library version.
 pub const AGENT_VERSION: &'static str = env!("CARGO_PKG_VERSION");
@@ -60,16 +60,7 @@ fn gtp_place_handicap(args: &Vec<String>,
         }
     };
     game.place_handicap(stones, handicap).map(|verts| {
-        let mut out = String::new();
-        for (index, vert) in verts.iter().enumerate() {
-            if index == 0 {
-                out.push_str(&vert.to_string());
-            } else {
-                out.push_str(" ");
-                out.push_str(&vert.to_string());
-            }
-        }
-        Some(out)
+        Some(Vertexes(verts).to_string())
     })
 }
 
@@ -120,14 +111,15 @@ impl Engine {
     }
 
     /// Runs the given command with the given game and returns the result.
-    pub fn exec(&self, mut game: &mut Game, command: &Command) -> CommandResult {
-        match command.name.as_ref() {
+    pub fn exec(&self, mut game: &mut Game, command: &Command) -> Response {
+        let result = match command.name.as_ref() {
             "list_commands" => Ok(Some(self.to_string())),
             "known_command" => Ok(Some(self.contains(command).to_string())),
             _ => self.inner.get(&command.name).map_or(Err("unknown command".to_owned()), |f| {
                 f(&command.args, &mut game)
             })
-        }
+        };
+        Response { id: command.id, result }
     }
 
     /// Adds a command to the command map.

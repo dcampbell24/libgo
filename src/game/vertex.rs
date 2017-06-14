@@ -54,3 +54,20 @@ impl FromStr for Vertex {
         Ok(Vertex { x: x, y: y - 1})
     }
 }
+
+/// A collection of Vertexes. This is a wrapper type for providing traits such as Display.
+#[derive(Debug)]
+pub struct Vertexes(pub Vec<Vertex>);
+
+impl fmt::Display for Vertexes {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for (index, vert) in self.0.iter().enumerate() {
+            if index == 0 {
+                write!(f, "{}", &vert)?
+            } else {
+                write!(f, " {}", vert)?
+            }
+        }
+        Ok(())
+    }
+}
