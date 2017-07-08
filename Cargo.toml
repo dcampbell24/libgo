@@ -1,6 +1,6 @@
 [package]
 name = "libgo"
-version = "0.2.0-dev"
+version = "0.2.0"
 authors = ["David Campbell <dcampbell24@gmail.com>"]
 
 description = "Basic Go library that implements the Go Text Protocol."
