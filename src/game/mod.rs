@@ -48,9 +48,10 @@ pub enum Clock {
 /// This structure includes everything needed for playing real Go games.
 #[derive(Clone, Debug)]
 pub struct Game {
-    player_turn: Player,
     /// The current state of the board.
-    board_history: Vec<Board>,
+    board: Board,
+    /// All previous board states.
+    previous_boards: Vec<Board>,
     move_history: Vec<Move>,
     /// The score handicap.
     pub komi: f64,
@@ -64,24 +65,19 @@ pub struct Game {
 impl Game {
     /// Returns a shared reference to the game board.
     pub fn board(&self) -> &Board {
-        self.board_history.last().expect("expected board_history to not be empty")
-    }
-
-    /// Returns a unique reference to the game board.
-    fn board_mut(&mut self) -> &mut Board {
-        self.board_history.last_mut().expect("expected board_history to not be empty")
+        &self.board
     }
 
     /// Clears all of the stones off the board and deletes the move history.
     pub fn clear_board(&mut self) {
-        self.board_history.truncate(1);
-        self.move_history.truncate(0);
-        self.board_mut().clear();
+        self.previous_boards.clear();
+        self.move_history.clear();
+        self.board.clear();
     }
 
     /// Picks a move uniform randomly from all the the possible legal moves.
     pub fn genmove_random(&mut self, player: Player) -> Move {
-        let mut possible_moves = self.board().empty_verts();
+        let mut possible_moves = self.board.empty_verts();
         let mut rng = rand::thread_rng();
 
         while !possible_moves.is_empty() {
@@ -92,13 +88,16 @@ impl Game {
                 Err(_) => { possible_moves.swap_remove(index); },
             }
         }
-        Move { player: player, vertex: None }
+
+        let pass = Move { player, vertex: None };
+        self.play(&pass).expect("failed to pass");
+        pass
     }
 
     /// Returns a vector containing all of the legal moves for a player.
     pub fn all_legal_moves(&self, player: Player) -> Vec<Vertex> {
         let mut legal_moves = Vec::new();
-        for vertex in self.board().empty_verts() {
+        for vertex in self.board.empty_verts() {
             if self.is_legal_move(&Move { player: player, vertex: Some(vertex) }) {
                 legal_moves.push(vertex);
             }
@@ -118,8 +117,8 @@ impl Game {
     pub fn with_board_size(board_size: usize) -> Result<Self, String> {
         Board::with_size(board_size).map(|board| {
             Game {
-                player_turn: Player::Black,
-                board_history: vec![board],
+                board,
+                previous_boards: Vec::new(),
                 move_history: Vec::new(),
                 komi: CHINESE_KOMI,
                 time_settings: Clock::Unlimited,
@@ -137,12 +136,12 @@ impl Game {
     fn is_legal_move(&self, mov: &Move) -> bool {
         if let Some(vertex) = mov.vertex {
             // The vertex must exist and be empty.
-            if !self.board().is_vacant(vertex) {
+            if !self.board.is_vacant(vertex) {
                 return false;
             }
 
             // Also, check the suicide and ko rules:
-            let mut test_board = self.board().clone();
+            let mut test_board = self.board.clone();
             test_board.place_stone(mov.player, vertex);
             match self.rule_set {
                 RuleSet::Chinese => {
@@ -152,7 +151,7 @@ impl Game {
                     }
                     // Check whether the super-ko rule was broken.
                     let test_arrangment = test_board.identity();
-                    for board in &self.board_history {
+                    for board in &self.previous_boards {
                         if test_arrangment == board.identity() {
                             return false;
                         }
@@ -170,62 +169,60 @@ impl Game {
         if !self.is_legal_move(mov) {
             return Err("illegal move".to_owned());
         }
-        let board = self.board().clone();
-        self.board_history.push(board);
+
         if let Some(vertex) = mov.vertex {
-            self.board_mut().place_stone(mov.player, vertex);
+            self.previous_boards.push(self.board.clone());
+            self.board.place_stone(mov.player, vertex);
         }
-        self.player_turn = match mov.player {
-            Player::Black => Player::White,
-            Player::White => Player::Black,
-        };
+
         self.move_history.push(mov.clone());
         Ok(())
     }
 
     /// Undo the last move. Fails if there are no moves to undo.
     pub fn undo(&mut self) -> Result<(), String> {
-        if self.move_history.is_empty() {
-            Err("move history is empty, can't undo".to_owned())
-        } else {
-            self.move_history.pop();
-            self.board_history.pop();
-            Ok(())
+        match self.move_history.pop() {
+            Some(mov) => {
+                if mov.vertex.is_some() {
+                    self.board = self.previous_boards.pop().unwrap();
+                }
+                Ok(())
+            }
+            None => {
+                Err("move history is empty, can't undo".to_owned())
+            }
         }
     }
-
 
     /// Places handicap stones in fixed locations based on the number requested and the size of
     /// the board. Fails if the board is empty or an invalid number of stones are requested.
     pub fn place_handicap(&mut self, stones: usize, handicap: Handicap) -> Result<Vec<Vertex>, String> {
-        let mut board = self.board_mut();
-
         if stones < 2 {
             return Err("a handicap must be at least two stones".to_owned());
         }
 
         if let Handicap::Free = handicap {
-            let max_handicaps = board.size() * board.size() - 1;
+            let max_handicaps = self.board.size() * self.board.size() - 1;
             if stones > max_handicaps {
                 return Err(format!("The number of handicaps requested must be less than {}",
                                    max_handicaps));
             }
         }
 
-        if !board.is_empty() {
+        if !self.board.is_empty() {
             return Err("board not empty".to_owned());
         }
-        let verts = board.fixed_handicaps(stones);
+        let verts = self.board.fixed_handicaps(stones);
 
         if let Handicap::Fixed = handicap {
             if stones > verts.len() {
                 return Err(format!("a board of size {} may not have more than {} fixed handicaps",
-                                    board.size(), verts.len()));
+                                    self.board.size(), verts.len()));
             }
         }
 
         for vert in &verts {
-            board.place_stone(Player::Black, *vert);
+            self.board.place_stone(Player::Black, *vert);
         }
         Ok(verts)
     }
@@ -234,20 +231,18 @@ impl Game {
     /// on the board, the board is not empty, less than two verticies are given, or so many are
     /// given that placing them would commit whole board suicide.
     pub fn set_free_handicap(&mut self, verts: HashSet<Vertex>) -> Result<(), String> {
-        let mut board = self.board_mut();
-
         if verts.len() < 2 {
             return Err("a handicap must be at least two stones".to_owned());
         }
-        let max_handicaps = board.size() * board.size() - 1;
+        let max_handicaps = self.board.size() * self.board.size() - 1;
         if verts.len() > max_handicaps {
             return Err(format!("The number of handicaps requested must less than {}",
                                max_handicaps));
         }
 
         for vertex in &verts {
-            if board.is_vacant(*vertex) {
-                board.place_stone(Player::Black, *vertex);
+            if self.board.is_vacant(*vertex) {
+                self.board.place_stone(Player::Black, *vertex);
             } else {
                 return Err(format!("{} is not on the board", vertex))
             }
