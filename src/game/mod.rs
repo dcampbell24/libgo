@@ -28,6 +28,7 @@ use game::player::Player;
 use game::vertex::Vertex;
 
 const DEFAULT_BOARD_SIZE: usize = 19;
+const MAX_MOVES: usize = 512;
 
 /// Fixed or Free placement of the handicap stones.
 #[derive(Clone, Copy, Debug)]
@@ -264,7 +265,8 @@ impl Game {
     /// Whether the game has ended or not.
     pub fn is_over(&self) -> bool {
         let move_count = self.move_history.len();
-        move_count > 1 &&
+
+        move_count > MAX_MOVES || move_count > 1 &&
                 self.move_history[move_count - 1].vertex.is_none() &&
                 self.move_history[move_count - 2].vertex.is_none()
     }
