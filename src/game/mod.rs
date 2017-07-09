@@ -260,6 +260,14 @@ impl Game {
             if self.board.is_empty() { Player::Black } else { Player::White }
         }
     }
+
+    /// Whether the game has ended or not.
+    pub fn is_over(&self) -> bool {
+        let move_count = self.move_history.len();
+        move_count > 1 &&
+                self.move_history[move_count - 1].vertex.is_none() &&
+                self.move_history[move_count - 2].vertex.is_none()
+    }
 }
 
 /// One of major Go variations.
