@@ -52,6 +52,7 @@ pub struct Game {
     board: Board,
     /// All previous board states.
     previous_boards: Vec<Board>,
+    /// All moves in the game record.
     move_history: Vec<Move>,
     /// The score handicap.
     pub komi: f64,
@@ -248,6 +249,16 @@ impl Game {
             }
         }
         Ok(())
+    }
+
+    /// Whose turn it is to play next.
+    pub fn player_turn(&self) -> Player {
+        let len = self.move_history.len();
+        if len > 0 {
+            self.move_history[len - 1].player.enemy()
+        } else {
+            if self.board.is_empty() { Player::Black } else { Player::White }
+        }
     }
 }
 
