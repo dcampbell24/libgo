@@ -1,3 +1,4 @@
+use std::fmt;
 use game::web::WEB;
 
 /// Black or White.
@@ -16,6 +17,16 @@ impl Player {
             Player::White => Player::Black,
             Player::Black => Player::White,
         }
+    }
+}
+
+impl fmt::Display for Player {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let color = match *self {
+            Player::Black => "black",
+            Player::White => "white",
+        };
+        write!(f, "{}", color)
     }
 }
 
