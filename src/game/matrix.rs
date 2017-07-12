@@ -5,7 +5,7 @@ use std::fmt::Debug;
 use std::ops::{Index, IndexMut};
 
 /// A matrix holding the state of type T for each vertex on the board.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Matrix<T: Clone + Debug + Default + PartialEq> {
     size: usize,
     vec: Vec<T>,
@@ -70,24 +70,19 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
         self.size
     }
 
-    /// Returns an immutable reference to the underlying state of the matrix.
-    pub fn vec(&self) -> &Vec<T> {
-        &self.vec
-    }
-
-    /// Returns the largest connected region of verticies not in not_state that contains vertex.
-    // This is a flood fill algorithm.
-    fn get_not_state_region(&self, vertex: Vertex, not_state: &T) -> Vec<Vertex> {
+    /// Returns the largest connected region of verticies for which the test function applied to
+    /// each vertex returns true starting at `vertex`.
+    fn get_region<F: Fn(&T) -> bool>(&self, vertex: Vertex, test: F) -> Vec<Vertex> {
         let mut processed = vec![false; self.size * self.size];
         let mut queue = Vec::new();
-        if *not_state == self[&vertex] {
+        if !test(&self[&vertex]) {
             return queue;
         }
         queue.push(vertex);
 
         while let Some(vertex) = queue.pop() {
             let index = index_from_vertex(vertex, self.size);
-            if *not_state != self.vec[index] {
+            if test(&self.vec[index]) {
                 processed[index] = true;
                 if vertex.x > 0 && !processed[index - 1] {
                     queue.push(Vertex { x: vertex.x - 1, y: vertex.y });
@@ -112,16 +107,20 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
         queue
     }
 
-    /// Returns all largest connected regions of verticies not == state; Black's regions are
-    /// connected sub-graphs of White or Empty verticies.
-    pub fn split_by_state(&self, state: &T) -> Vec<Vec<Vertex>> {
+    /// Returns all of the largest connected regions of verticies for which the test function
+    /// applied to each vertex returns true.
+    pub fn get_regions<F: Fn(&T) -> bool>(&self, test: F) -> Vec<Vec<Vertex>> {
         let mut regions = Vec::new();
         let mut processed = vec![false; self.size * self.size];
         for i in 0 .. processed.len() {
-            if processed[i] || *state == self.vec[i] {
+            if processed[i] {
                 continue;
             }
-            let region = self.get_not_state_region(vertex_from_index(i, self.size), state);
+            if !test(&self.vec[i]) {
+                processed[i] = true;
+                continue;
+            }
+            let region = self.get_region(vertex_from_index(i, self.size), &test);
             for v in &region {
                 processed[index_from_vertex(*v, self.size)] = true;
             }
@@ -150,7 +149,7 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
 impl<'a, T: Clone + Debug + Default + PartialEq> Index<&'a Vertex> for Matrix<T> {
     type Output = T;
     fn index(&self, vertex: &Vertex) -> &Self::Output {
-        &self.vec.get(index_from_vertex(*vertex, self.size)).expect("vertex not in the matrix")
+        self.vec.get(index_from_vertex(*vertex, self.size)).expect("vertex not in the matrix")
     }
 }
 

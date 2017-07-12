@@ -4,7 +4,7 @@ use game::vertex::Vertex;
 use std::collections::HashSet;
 
 
-/// A connected sub-graph with nodes of all the same type.
+/// A connected set of stones of the same color.
 #[derive(Clone, Debug)]
 pub struct Chain {
     /// The state all of the verticies of the chain are in.

@@ -152,9 +152,8 @@ impl Game {
                         return false;
                     }
                     // Check whether the super-ko rule was broken.
-                    let test_arrangment = test_board.identity();
                     for board in &self.previous_boards {
-                        if test_arrangment == board.identity() {
+                        if test_board == *board {
                             return false;
                         }
                     }

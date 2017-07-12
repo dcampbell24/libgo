@@ -21,6 +21,12 @@ pub struct Board {
     chains: Chains,
 }
 
+impl PartialEq for Board {
+    fn eq(&self, other: &Board) -> bool {
+        self.matrix == other.matrix
+    }
+}
+
 impl Board {
     /// Returns the center point (天元 tengen) of the board. Note that even size boards don't have a
     /// center point.
@@ -90,11 +96,6 @@ impl Board {
             handicaps.truncate(stones);
         }
         handicaps
-    }
-
-    /// Returns a vec that can be used for checking identity.
-    pub fn identity(&self) -> &Vec<WEB> {
-        self.matrix.vec()
     }
 
     /// Returns true if there are no stones on the board.
@@ -216,8 +217,9 @@ impl Board {
                 }
             }
         }
-
-        let regions = self.matrix.split_by_state(&WEB::from(player));
+        let regions = self.matrix.get_regions(|vertex| {
+            vertex != &WEB::from(player)
+        });
         regions.into_iter().filter(|region| {
             for vertex in region {
                 if !exterior_verts[vertex] && self.matrix[vertex] == WEB::Empty {

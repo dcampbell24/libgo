@@ -90,17 +90,17 @@ mod tests {
 
     #[bench]
     fn bench_split_by_black_empty_board(b: &mut Bencher) {
-        let matrix = Matrix::with_size(19);
+        let matrix: Matrix<WEB> = Matrix::with_size(19);
         b.iter(|| {
-            matrix.split_by_state(&WEB::Black)
+            matrix.get_regions(|vertex| vertex != &WEB::Black)
         });
     }
 
     #[bench]
     fn bench_split_by_black_checkered_board(b: &mut Bencher) {
-        let matrix = black_checkered_matrix(19);
+        let matrix: Matrix<WEB> = black_checkered_matrix(19);
         b.iter(|| {
-            matrix.split_by_state(&WEB::Black)
+            matrix.get_regions(|vertex| vertex != &WEB::Black)
         });
     }
 
