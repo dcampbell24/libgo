@@ -103,9 +103,12 @@ impl Board {
         self.chains.is_empty()
     }
 
-    /// Returns true if the vertex is empty.
+    /// Returns true if the vertex exists and is empty.
     pub fn is_vacant(&self, vertex: Vertex) -> bool {
-        self.matrix.is_in_state(vertex, WEB::Empty)
+        match self.matrix.get(vertex) {
+            Some(web) => web == &WEB::Empty,
+            None => false,
+        }
     }
 
     /// Returns a list of all the empty verticies.

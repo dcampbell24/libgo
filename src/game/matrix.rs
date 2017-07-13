@@ -1,8 +1,9 @@
 //! A generic Matrix module specilized for holding Go Board state.
 
-use game::vertex::Vertex;
 use std::fmt::Debug;
 use std::ops::{Index, IndexMut};
+
+use game::vertex::Vertex;
 
 /// A matrix holding the state of type T for each vertex on the board.
 #[derive(Clone, Debug, PartialEq)]
@@ -133,15 +134,6 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
     pub fn reset(&mut self) {
         for vertex in &mut self.vec {
             *vertex = T::default();
-        }
-    }
-
-    /// Returns true if the vertex is on the board and empty, otherwise false.
-    pub fn is_in_state(&self, vertex: Vertex, in_state: T) -> bool {
-        let index = index_from_vertex(vertex, self.size);
-        match self.vec.get(index) {
-            Some(web) => web == &in_state,
-            None => false,
         }
     }
 }
