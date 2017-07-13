@@ -84,14 +84,24 @@ impl Game {
 
         while !possible_moves.is_empty() {
             let index = rng.gen_range(0, possible_moves.len());
-            let mov = Move { player: player, vertex: Some(possible_moves[index])};
+            let mov = Move {
+                player: player,
+                vertex: Some(possible_moves[index]),
+            };
             match self.play(&mov) {
-                Ok(_) => { return mov; },
-                Err(_) => { possible_moves.swap_remove(index); },
+                Ok(_) => {
+                    return mov;
+                }
+                Err(_) => {
+                    possible_moves.swap_remove(index);
+                }
             }
         }
 
-        let pass = Move { player, vertex: None };
+        let pass = Move {
+            player,
+            vertex: None,
+        };
         self.play(&pass).expect("failed to pass");
         pass
     }
@@ -100,7 +110,10 @@ impl Game {
     pub fn all_legal_moves(&self, player: Player) -> Vec<Vertex> {
         let mut legal_moves = Vec::new();
         for vertex in self.board.empty_verts() {
-            if self.is_legal_move(&Move { player: player, vertex: Some(vertex) }) {
+            if self.is_legal_move(&Move {
+                player: player,
+                vertex: Some(vertex),
+            }) {
                 legal_moves.push(vertex);
             }
         }
@@ -111,8 +124,8 @@ impl Game {
     /// This may be extened to surreal numbers and combintorial game values to give a more precise
     /// description of the state of the game.
     pub fn value(&self) -> i32 {
-          self.all_legal_moves(Player::Black).len() as i32
-        - self.all_legal_moves(Player::White).len() as i32
+        self.all_legal_moves(Player::Black).len() as i32 -
+            self.all_legal_moves(Player::White).len() as i32
     }
 
     /// Returns a new game with the given board size if the board size is supported, else None.
@@ -189,15 +202,17 @@ impl Game {
                 }
                 Ok(())
             }
-            None => {
-                Err("move history is empty, can't undo".to_owned())
-            }
+            None => Err("move history is empty, can't undo".to_owned()),
         }
     }
 
     /// Places handicap stones in fixed locations based on the number requested and the size of
     /// the board. Fails if the board is empty or an invalid number of stones are requested.
-    pub fn place_handicap(&mut self, stones: usize, handicap: Handicap) -> Result<Vec<Vertex>, String> {
+    pub fn place_handicap(
+        &mut self,
+        stones: usize,
+        handicap: Handicap,
+    ) -> Result<Vec<Vertex>, String> {
         if stones < 2 {
             return Err("a handicap must be at least two stones".to_owned());
         }
@@ -205,8 +220,10 @@ impl Game {
         if let Handicap::Free = handicap {
             let max_handicaps = self.board.size() * self.board.size() - 1;
             if stones > max_handicaps {
-                return Err(format!("The number of handicaps requested must be less than {}",
-                                   max_handicaps));
+                return Err(format!(
+                    "The number of handicaps requested must be less than {}",
+                    max_handicaps
+                ));
             }
         }
 
@@ -217,8 +234,11 @@ impl Game {
 
         if let Handicap::Fixed = handicap {
             if stones > verts.len() {
-                return Err(format!("a board of size {} may not have more than {} fixed handicaps",
-                                    self.board.size(), verts.len()));
+                return Err(format!(
+                    "a board of size {} may not have more than {} fixed handicaps",
+                    self.board.size(),
+                    verts.len()
+                ));
             }
         }
 
@@ -237,15 +257,17 @@ impl Game {
         }
         let max_handicaps = self.board.size() * self.board.size() - 1;
         if verts.len() > max_handicaps {
-            return Err(format!("The number of handicaps requested must less than {}",
-                               max_handicaps));
+            return Err(format!(
+                "The number of handicaps requested must less than {}",
+                max_handicaps
+            ));
         }
 
         for vertex in &verts {
             if self.board.is_vacant(*vertex) {
                 self.board.place_stone(Player::Black, *vertex);
             } else {
-                return Err(format!("{} is not on the board", vertex))
+                return Err(format!("{} is not on the board", vertex));
             }
         }
         Ok(())
@@ -257,7 +279,11 @@ impl Game {
         if len > 0 {
             self.move_history[len - 1].player.enemy()
         } else {
-            if self.board.is_empty() { Player::Black } else { Player::White }
+            if self.board.is_empty() {
+                Player::Black
+            } else {
+                Player::White
+            }
         }
     }
 
@@ -265,8 +291,8 @@ impl Game {
     pub fn is_over(&self) -> bool {
         let move_count = self.move_history.len();
 
-        move_count > MAX_MOVES || move_count > 1 &&
-                self.move_history[move_count - 1].vertex.is_none() &&
+        move_count > MAX_MOVES ||
+            move_count > 1 && self.move_history[move_count - 1].vertex.is_none() &&
                 self.move_history[move_count - 2].vertex.is_none()
     }
 }

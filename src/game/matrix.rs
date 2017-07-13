@@ -25,13 +25,15 @@ fn index_from_vertex(vertex: Vertex, board_size: usize) -> usize {
 impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
     /// Returns a set of all of the empty verticies on the board.
     pub fn verts_in_state(&self, in_state: T) -> Vec<Vertex> {
-        self.vec.iter().enumerate().filter_map(|(index, state)| {
-            if *state == in_state {
+        self.vec
+            .iter()
+            .enumerate()
+            .filter_map(|(index, state)| if *state == in_state {
                 Some(vertex_from_index(index, self.size))
             } else {
                 None
-            }
-        }).collect()
+            })
+            .collect()
     }
 
     /// Returns the neighboring exterior verticies of a vertex given a board size.
@@ -39,16 +41,28 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
         let board_size = self.size;
         let mut adjacencies = Vec::with_capacity(4);
         if vertex.x > 0 {
-            adjacencies.push(Vertex { x: vertex.x - 1, y: vertex.y });
+            adjacencies.push(Vertex {
+                x: vertex.x - 1,
+                y: vertex.y,
+            });
         }
         if vertex.y > 0 {
-            adjacencies.push(Vertex { x: vertex.x, y: vertex.y - 1 });
+            adjacencies.push(Vertex {
+                x: vertex.x,
+                y: vertex.y - 1,
+            });
         }
         if vertex.x + 1 < board_size {
-            adjacencies.push(Vertex { x: vertex.x + 1, y: vertex.y });
+            adjacencies.push(Vertex {
+                x: vertex.x + 1,
+                y: vertex.y,
+            });
         }
         if vertex.y + 1 < board_size {
-            adjacencies.push(Vertex { x: vertex.x, y: vertex.y + 1 });
+            adjacencies.push(Vertex {
+                x: vertex.x,
+                y: vertex.y + 1,
+            });
         }
         adjacencies
     }
@@ -86,16 +100,28 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
             if test(&self.vec[index]) {
                 processed[index] = true;
                 if vertex.x > 0 && !processed[index - 1] {
-                    queue.push(Vertex { x: vertex.x - 1, y: vertex.y });
+                    queue.push(Vertex {
+                        x: vertex.x - 1,
+                        y: vertex.y,
+                    });
                 }
                 if vertex.x + 1 < self.size && !processed[index + 1] {
-                    queue.push(Vertex { x: vertex.x + 1, y: vertex.y });
+                    queue.push(Vertex {
+                        x: vertex.x + 1,
+                        y: vertex.y,
+                    });
                 }
                 if vertex.y > 0 && !processed[index - self.size] {
-                    queue.push(Vertex { x: vertex.x, y: vertex.y - 1 });
+                    queue.push(Vertex {
+                        x: vertex.x,
+                        y: vertex.y - 1,
+                    });
                 }
                 if vertex.y + 1 < self.size && !processed[index + self.size] {
-                    queue.push(Vertex { x: vertex.x, y: vertex.y + 1 });
+                    queue.push(Vertex {
+                        x: vertex.x,
+                        y: vertex.y + 1,
+                    });
                 }
             }
         }
@@ -113,7 +139,7 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
     pub fn get_regions<F: Fn(&T) -> bool>(&self, test: F) -> Vec<Vec<Vertex>> {
         let mut regions = Vec::new();
         let mut processed = vec![false; self.size * self.size];
-        for i in 0 .. processed.len() {
+        for i in 0..processed.len() {
             if processed[i] {
                 continue;
             }
@@ -141,12 +167,16 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
 impl<'a, T: Clone + Debug + Default + PartialEq> Index<&'a Vertex> for Matrix<T> {
     type Output = T;
     fn index(&self, vertex: &Vertex) -> &Self::Output {
-        self.vec.get(index_from_vertex(*vertex, self.size)).expect("vertex not in the matrix")
+        self.vec
+            .get(index_from_vertex(*vertex, self.size))
+            .expect("vertex not in the matrix")
     }
 }
 
 impl<'a, T: Clone + Debug + Default + PartialEq> IndexMut<&'a Vertex> for Matrix<T> {
     fn index_mut(&mut self, vertex: &Vertex) -> &mut T {
-        self.vec.get_mut(index_from_vertex(*vertex, self.size)).expect("vertex not in the matrix")
+        self.vec
+            .get_mut(index_from_vertex(*vertex, self.size))
+            .expect("vertex not in the matrix")
     }
 }

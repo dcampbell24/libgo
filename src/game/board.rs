@@ -37,7 +37,10 @@ impl Board {
             None
         } else {
             let center = board_size / 2;
-            Some(Vertex { x: center, y: center })
+            Some(Vertex {
+                x: center,
+                y: center,
+            })
         }
     }
 
@@ -49,17 +52,25 @@ impl Board {
         if board_size < 7 {
             return Vec::new();
         }
-        let min_line = if board_size > 12 {
-            3
-        } else {
-            2
-        };
+        let min_line = if board_size > 12 { 3 } else { 2 };
         let max_line = board_size - min_line - 1;
         let mut star_points = vec![
-            Vertex { x: min_line, y: min_line },
-            Vertex { x: max_line, y: max_line },
-            Vertex { x: min_line, y: max_line },
-            Vertex { x: max_line, y: min_line },
+            Vertex {
+                x: min_line,
+                y: min_line,
+            },
+            Vertex {
+                x: max_line,
+                y: max_line,
+            },
+            Vertex {
+                x: min_line,
+                y: max_line,
+            },
+            Vertex {
+                x: max_line,
+                y: min_line,
+            },
         ];
         if board_size == 7 {
             return star_points;
@@ -71,17 +82,29 @@ impl Board {
         };
 
         star_points.append(&mut vec![
-            Vertex { x: min_line, y: center_line },
-            Vertex { x: max_line, y: center_line },
-            Vertex { x: center_line, y: min_line },
-            Vertex { x: center_line, y: max_line },
+            Vertex {
+                x: min_line,
+                y: center_line,
+            },
+            Vertex {
+                x: max_line,
+                y: center_line,
+            },
+            Vertex {
+                x: center_line,
+                y: min_line,
+            },
+            Vertex {
+                x: center_line,
+                y: max_line,
+            },
         ]);
         star_points
     }
 
     /// Returns a list of handicap verticies given a board size and desired number of stones. The
-    /// number of handicaps returned will be as large as possible given the number of valid handicaps,
-    /// but may be less than requested.
+    /// number of handicaps returned will be as large as possible given the number of valid
+    /// handicaps, but may be less than requested.
     pub fn fixed_handicaps(&self, stones: usize) -> Vec<Vertex> {
         let board_size = self.size();
 
@@ -137,8 +160,12 @@ impl Board {
     /// common. Returns None if the board size is not supported.
     pub fn with_size(size: usize) -> Result<Self, String> {
         if size < BOARD_MIN_SIZE || size > BOARD_MAX_SIZE {
-            Err(format!("Board size must be between {} and {}, but is {}.",
-                        BOARD_MIN_SIZE, BOARD_MAX_SIZE, size))
+            Err(format!(
+                "Board size must be between {} and {}, but is {}.",
+                BOARD_MIN_SIZE,
+                BOARD_MAX_SIZE,
+                size
+            ))
         } else {
             Ok(Board {
                 matrix: Matrix::with_size(size),
@@ -156,8 +183,16 @@ impl Board {
         adjacencies.retain(|v: &Vertex| self.matrix[v] == WEB::Empty);
 
         match player {
-            Player::White => Neighbors { good: whites, evil: blacks, empty: adjacencies },
-            Player::Black => Neighbors { good: blacks, evil: whites, empty: adjacencies },
+            Player::White => Neighbors {
+                good: whites,
+                evil: blacks,
+                empty: adjacencies,
+            },
+            Player::Black => Neighbors {
+                good: blacks,
+                evil: whites,
+                empty: adjacencies,
+            },
         }
     }
 
@@ -220,17 +255,19 @@ impl Board {
                 }
             }
         }
-        let regions = self.matrix.get_regions(|vertex| {
-            vertex != &WEB::from(player)
-        });
-        regions.into_iter().filter(|region| {
-            for vertex in region {
-                if !exterior_verts[vertex] && self.matrix[vertex] == WEB::Empty {
-                    return false;
+        let regions = self.matrix
+            .get_regions(|vertex| vertex != &WEB::from(player));
+        regions
+            .into_iter()
+            .filter(|region| {
+                for vertex in region {
+                    if !exterior_verts[vertex] && self.matrix[vertex] == WEB::Empty {
+                        return false;
+                    }
                 }
-            }
-            true
-        }).collect()
+                true
+            })
+            .collect()
     }
 
     /// Returns a human readable ASCII representation of the board.
@@ -252,7 +289,7 @@ impl Board {
                         } else {
                             '.'
                         }
-                    },
+                    }
                     WEB::Black => 'x',
                     WEB::White => 'o',
                 };

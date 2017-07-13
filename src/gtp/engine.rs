@@ -26,10 +26,13 @@ fn gtp_boardsize(args: &Vec<String>, game: &mut Game) -> CommandResult {
     match u32::from_str_radix(&args[0], 10) {
         Ok(size) => {
             match Game::with_board_size(size as usize) {
-                Ok(new_game) => { *game = new_game; Ok(None) },
+                Ok(new_game) => {
+                    *game = new_game;
+                    Ok(None)
+                }
                 Err(_) => Err("unacceptable size".to_owned()),
             }
-        },
+        }
         Err(_) => Err("boardsize not a u32".to_owned()),
     }
 }
@@ -47,8 +50,7 @@ fn gtp_genmove(args: &Vec<String>, game: &mut Game) -> CommandResult {
     Ok(Some(move_str))
 }
 
-fn gtp_place_handicap(args: &Vec<String>,
-                      game: &mut Game, handicap: Handicap) -> CommandResult {
+fn gtp_place_handicap(args: &Vec<String>, game: &mut Game, handicap: Handicap) -> CommandResult {
 
     if args.is_empty() {
         return Err("syntax error".to_owned());
@@ -59,9 +61,8 @@ fn gtp_place_handicap(args: &Vec<String>,
             return Err("number is not a u32".to_owned());
         }
     };
-    game.place_handicap(stones, handicap).map(|verts| {
-        Some(Vertexes(verts).to_string())
-    })
+    game.place_handicap(stones, handicap)
+        .map(|verts| Some(Vertexes(verts).to_string()))
 }
 
 fn gtp_play(args: &Vec<String>, game: &mut Game) -> CommandResult {
@@ -72,7 +73,10 @@ fn gtp_play(args: &Vec<String>, game: &mut Game) -> CommandResult {
     let color = try!(parse_color(&args[0]));
     let vertex = args[1].to_uppercase();
     if &vertex == "PASS" {
-        return game.play(&Move { player: color, vertex: None }).map(|_ok| None);
+        return game.play(&Move {
+            player: color,
+            vertex: None,
+        }).map(|_ok| None);
     }
 
     let vertex = try!(Vertex::from_str(&vertex));
@@ -97,7 +101,7 @@ fn parse_color(color: &str) -> Result<Player, String> {
 
 /// A structure holding a map of commands to their fns.
 pub struct Engine {
-    inner: HashMap<String, Box<Fn(&Vec<String>, &mut Game) -> CommandResult>>
+    inner: HashMap<String, Box<Fn(&Vec<String>, &mut Game) -> CommandResult>>,
 }
 
 impl Engine {
@@ -115,34 +119,40 @@ impl Engine {
         let result = match command.name.as_ref() {
             "list_commands" => Ok(Some(self.to_string())),
             "known_command" => Ok(Some(self.contains(command).to_string())),
-            _ => self.inner.get(&command.name).map_or(Err("unknown command".to_owned()), |f| {
-                f(&command.args, &mut game)
-            })
+            _ => {
+                self.inner.get(&command.name).map_or(
+                    Err("unknown command".to_owned()),
+                    |f| f(&command.args, &mut game),
+                )
+            }
         };
-        Response { id: command.id, result }
+        Response {
+            id: command.id,
+            result,
+        }
     }
 
     /// Adds a command to the command map.
     pub fn insert<F>(&mut self, name: &str, f: F)
-        where F: 'static + Fn(&Vec<String>, &mut Game) -> CommandResult {
+    where
+        F: 'static + Fn(&Vec<String>, &mut Game) -> CommandResult,
+    {
 
         self.inner.insert(name.to_owned(), Box::new(f));
     }
 
     /// Returns a new Self containing all of the GTP required commands.
     pub fn new() -> Self {
-        let mut commands = Engine { inner: HashMap::new() };
+        let mut commands = Engine {
+            inner: HashMap::new(),
+        };
 
-        commands.insert("boardsize", |args, game| {
-            gtp_boardsize(args, game)
-        });
+        commands.insert("boardsize", |args, game| gtp_boardsize(args, game));
         commands.insert("clear_board", |_args, game| {
             game.clear_board();
             Ok(None)
         });
-        commands.insert("genmove", |args, game| {
-            gtp_genmove(&args, game)
-        });
+        commands.insert("genmove", |args, game| gtp_genmove(&args, game));
         commands.insert("known_command", |_args, _game| {
             unreachable!();
         });
@@ -150,29 +160,26 @@ impl Engine {
             if args.is_empty() {
                 return Err("expected komi value".to_owned());
             }
-            args[0].parse::<f64>().ok().map_or(Err("komi is not a float".to_owned()), |komi| {
-                game.komi = komi;
-                Ok(None)
-            })
+            args[0].parse::<f64>().ok().map_or(
+                Err("komi is not a float".to_owned()),
+                |komi| {
+                    game.komi = komi;
+                    Ok(None)
+                },
+            )
         });
         commands.insert("list_commands", |_args, _game| {
             unreachable!();
         });
-        commands.insert("name", |_args, _game| {
-            Ok(Some(PROGRAM_NAME.to_owned()))
-        });
+        commands.insert("name", |_args, _game| Ok(Some(PROGRAM_NAME.to_owned())));
         commands.insert("play", |args: &Vec<String>, game: &mut Game| {
             gtp_play(&args, game)
         });
         commands.insert("protocol_version", |_args, _game| {
             Ok(Some(GTP_PROTOCOL_VERSION.to_owned()))
         });
-        commands.insert("quit", |_args, _game| {
-            Ok(None)
-        });
-        commands.insert("version", |_args, _game| {
-            Ok(Some(AGENT_VERSION.to_owned()))
-        });
+        commands.insert("quit", |_args, _game| Ok(None));
+        commands.insert("version", |_args, _game| Ok(Some(AGENT_VERSION.to_owned())));
 
         commands
     }
@@ -196,11 +203,9 @@ impl Engine {
     /// Register additional GTP commands that are not required.
     pub fn register_extra_commands(&mut self) {
         // Core Play Command
-        self.insert("undo", |_args, game| {
-            match game.undo() {
-                Ok(()) => Ok(None),
-                Err(_) => Err("cannot undo".to_owned()),
-            }
+        self.insert("undo", |_args, game| match game.undo() {
+            Ok(()) => Ok(None),
+            Err(_) => Err("cannot undo".to_owned()),
         });
         // Debug Command
         self.insert("showboard", |_args, game| {
@@ -221,9 +226,7 @@ impl Engine {
             game.kgs_game_over = true;
             Ok(None)
         });
-        self.insert("kgs-genmove_cleanup", |args, game| {
-            gtp_genmove(&args, game)
-        });
+        self.insert("kgs-genmove_cleanup", |args, game| gtp_genmove(&args, game));
         // kgs-rules
         // kgs-time_settings
     }
@@ -244,11 +247,13 @@ impl Engine {
             gtp_place_handicap(args, game, Handicap::Free)
         });
         self.insert("set_free_handicap", |args, game| {
-            let verts: HashSet<_> = args.iter().filter_map(|s| {
-                Vertex::from_str(&s.to_uppercase()).ok()
-            }).collect();
+            let verts: HashSet<_> = args.iter()
+                .filter_map(|s| Vertex::from_str(&s.to_uppercase()).ok())
+                .collect();
             if verts.len() != args.len() {
-                return Err("syntax error, repeated vertex, or pass given as argument".to_owned());
+                return Err(
+                    "syntax error, repeated vertex, or pass given as argument".to_owned(),
+                );
             }
 
             game.set_free_handicap(verts).map(|_ok| None)

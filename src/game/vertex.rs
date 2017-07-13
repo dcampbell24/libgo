@@ -22,7 +22,10 @@ impl fmt::Debug for Vertex {
 
 impl fmt::Display for Vertex {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let letter = GOBAN_LETTERS.chars().nth(self.x).expect("expected char to be in GOBAN_LETTERS");
+        let letter = GOBAN_LETTERS
+            .chars()
+            .nth(self.x)
+            .expect("expected char to be in GOBAN_LETTERS");
         let number = (self.y + 1).to_owned();
         write!(f, "{}{}", letter, number)
     }
@@ -36,7 +39,10 @@ impl FromStr for Vertex {
             return Err("string too short to be a vertex".to_owned());
         }
 
-        let letter = vertex.chars().next().expect("expected vertex to contain a letter");
+        let letter = vertex
+            .chars()
+            .next()
+            .expect("expected vertex to contain a letter");
         let x = match GOBAN_LETTERS.find(letter) {
             Some(x) => x,
             None => return Err(format!("invalid coordinate letter {:?}", letter)),
@@ -51,7 +57,7 @@ impl FromStr for Vertex {
         if y == 0 {
             return Err("number must be greater than zero".to_owned());
         }
-        Ok(Vertex { x: x, y: y - 1})
+        Ok(Vertex { x: x, y: y - 1 })
     }
 }
 

@@ -17,7 +17,9 @@ pub fn main() {
 
     let mut game = Game::new();
 
-    let address = env::args().nth(1).expect("error: expected server address argument host:port");
+    let address = env::args()
+        .nth(1)
+        .expect("error: expected server address argument host:port");
     let mut stream = TcpStream::connect(address).expect("failed to bind server to address");
 
     for line in BufReader::new(stream.try_clone().expect("failed to clone stream")).lines() {
@@ -27,10 +29,12 @@ pub fn main() {
         if let Some(command) = Command::from_line(&line) {
             let response = gtp.exec(&mut game, &command).to_string();
             print!("-> {}", response);
-            stream.write_all(response.as_bytes()).expect("failed to send reply");
+            stream
+                .write_all(response.as_bytes())
+                .expect("failed to send reply");
 
             if command.name == "quit" {
-                return
+                return;
             }
         }
     }

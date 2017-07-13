@@ -9,8 +9,13 @@ pub struct CommandsIter<B> {
 /// A trait extending BufRead to allow reading GTP commands from any type implementing BufRead.
 pub trait Commands: BufRead {
     /// A method that returns an iterator over GTP commands.
-    fn commands(self) -> CommandsIter<Self> where Self: Sized {
-        CommandsIter { lines: self.lines() }
+    fn commands(self) -> CommandsIter<Self>
+    where
+        Self: Sized,
+    {
+        CommandsIter {
+            lines: self.lines(),
+        }
     }
 }
 
@@ -20,19 +25,19 @@ impl<C: Commands> Iterator for CommandsIter<C> {
     fn next(&mut self) -> Option<Self::Item> {
         while let Some(result_line) = self.lines.next() {
             match result_line {
-                Ok(line) => if let Some(command) = Command::from_line(&line) {
-                    return Some(Ok(command));
-                },
-                Err(err) => {
-                    return Some(Err(err))
+                Ok(line) => {
+                    if let Some(command) = Command::from_line(&line) {
+                        return Some(Ok(command));
+                    }
                 }
+                Err(err) => return Some(Err(err)),
             }
         }
         None
     }
 }
 
-impl<T: BufRead> Commands for T { }
+impl<T: BufRead> Commands for T {}
 
 // From the GTP 2 Specification Oct 2002:
 //
@@ -70,7 +75,11 @@ fn preprocess_line(line: &str) -> Option<String> {
         out.push(c);
     }
 
-    if keep { Some(out) } else { None }
+    if keep {
+        Some(out)
+    } else {
+        None
+    }
 }
 
 /// A GTP command.
@@ -92,9 +101,7 @@ impl Command {
 
         preprocess_line(line).map(|line| {
             let mut words = line.split_whitespace().peekable();
-            if let Some(Ok(command_id)) = words.peek().map(|word| {
-                u32::from_str_radix(word, 10)
-            }) {
+            if let Some(Ok(command_id)) = words.peek().map(|word| u32::from_str_radix(word, 10)) {
                 words.next();
                 id = Some(command_id);
             }
@@ -109,7 +116,7 @@ impl Command {
 
             let args: Vec<String> = words.map(|s| s.to_owned()).collect();
 
-            Command {id, name, args}
+            Command { id, name, args }
         })
     }
 }
@@ -123,7 +130,10 @@ mod tests {
     #[test]
     fn preprocess_line_() {
         assert_eq!(preprocess_line("1\r2\r quit"), Some("12 quit".to_string()));
-        assert_eq!(preprocess_line("quit # a comment"), Some("quit ".to_string()));
+        assert_eq!(
+            preprocess_line("quit # a comment"),
+            Some("quit ".to_string())
+        );
         assert_eq!(preprocess_line("\tquit\t"), Some(" quit ".to_string()));
         assert_eq!(preprocess_line("   # a comment"), None);
         assert_eq!(preprocess_line(""), None);
@@ -134,32 +144,56 @@ mod tests {
         assert_eq!(Command::from_line(""), None);
         assert_eq!(
             Command::from_line("1"),
-            Some(Command { id: Some(1), name: String::new(), args: Vec::new() })
+            Some(Command {
+                id: Some(1),
+                name: String::new(),
+                args: Vec::new(),
+            })
         );
         assert_eq!(
             Command::from_line("1 quit"),
-            Some(Command { id: Some(1), name: "quit".to_string(), args: Vec::new() })
+            Some(Command {
+                id: Some(1),
+                name: "quit".to_string(),
+                args: Vec::new(),
+            })
         );
         assert_eq!(
             Command::from_line("quit"),
-            Some(Command { id: None, name: "quit".to_string(), args: Vec::new() })
+            Some(Command {
+                id: None,
+                name: "quit".to_string(),
+                args: Vec::new(),
+            })
         );
 
         // If a number is given that is not a u32, it will be treated as a command name.
         let large_uint = (u32::MAX as u64 + 1).to_string();
         assert_eq!(
             Command::from_line(&large_uint),
-            Some(Command { id: None, name: large_uint, args: Vec::new() })
+            Some(Command {
+                id: None,
+                name: large_uint,
+                args: Vec::new(),
+            })
         );
         let negative_number = "-1".to_string();
         assert_eq!(
             Command::from_line(&negative_number),
-            Some(Command { id: None, name: negative_number, args: Vec::new() })
+            Some(Command {
+                id: None,
+                name: negative_number,
+                args: Vec::new(),
+            })
         );
 
         assert_eq!(
             Command::from_line("play w b19"),
-            Some(Command { id: None, name: "play".to_string(), args: vec!["w".to_string(), "b19".to_string()] })
+            Some(Command {
+                id: None,
+                name: "play".to_string(),
+                args: vec!["w".to_string(), "b19".to_string()],
+            })
         );
     }
 
@@ -168,11 +202,19 @@ mod tests {
         let mut commands = b"one\n2 two\n".commands();
         assert_eq!(
             commands.next().unwrap().unwrap(),
-            Command { id: None, name: "one".to_string(), args: Vec::new() }
+            Command {
+                id: None,
+                name: "one".to_string(),
+                args: Vec::new(),
+            }
         );
         assert_eq!(
             commands.next().unwrap().unwrap(),
-            Command { id: Some(2), name: "two".to_string(), args: Vec::new() }
+            Command {
+                id: Some(2),
+                name: "two".to_string(),
+                args: Vec::new(),
+            }
         );
     }
 }

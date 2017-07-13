@@ -21,7 +21,7 @@ fn main() {
         print!("{}", response);
 
         if command.name == "quit" {
-            return
+            return;
         }
     }
 }

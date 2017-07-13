@@ -18,7 +18,7 @@ impl Default for WEB {
 }
 
 impl From<Player> for WEB {
-     fn from(player: Player) -> Self {
+    fn from(player: Player) -> Self {
         match player {
             Player::White => WEB::White,
             Player::Black => WEB::Black,

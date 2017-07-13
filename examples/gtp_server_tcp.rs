@@ -11,16 +11,22 @@ static VERSION: &'static str = "0.1.0-dev";
 
 fn main() {
     let matches = App::new("A Go Server")
-        .about("\nThis is a TCP server that listens for GTP engines\
-                  to connect and then plays them against each other.")
+        .about(
+            "\nThis is a TCP server that listens for GTP engines\
+             to connect and then plays them against each other.",
+        )
         .version(VERSION)
-        .arg(Arg::with_name("<host:port>")
-            .index(1)
-            .help("Listen for GTP drivers on host and port"))
-        .arg(Arg::with_name("N")
-            .long("boardsize")
-            .takes_value(true)
-            .help("Send 'boardsize N' to clients"))
+        .arg(
+            Arg::with_name("<host:port>")
+                .index(1)
+                .help("Listen for GTP drivers on host and port"),
+        )
+        .arg(
+            Arg::with_name("N")
+                .long("boardsize")
+                .takes_value(true)
+                .help("Send 'boardsize N' to clients"),
+        )
         .get_matches();
 
     let mut setup_commands = Vec::new();
@@ -66,22 +72,22 @@ impl Game {
         }
 
         for i in 1..362 {
-            println!("*** turn {:04} ***", 2*i - 1);
-            let black_move = send_command(
-                "genmove b\n", &mut self.black_connection, &mut black_reader
-            );
+            println!("*** turn {:04} ***", 2 * i - 1);
+            let black_move =
+                send_command("genmove b\n", &mut self.black_connection, &mut black_reader);
             send_command(
-                &black_move.replace("=","play b").replace("\n\n", "\n"),
-                &mut self.white_connection, &mut white_reader
+                &black_move.replace("=", "play b").replace("\n\n", "\n"),
+                &mut self.white_connection,
+                &mut white_reader,
             );
 
-            println!("*** turn {:04} ***", 2*i);
-            let white_move = send_command(
-                "genmove w\n", &mut self.white_connection, &mut white_reader
-            );
+            println!("*** turn {:04} ***", 2 * i);
+            let white_move =
+                send_command("genmove w\n", &mut self.white_connection, &mut white_reader);
             send_command(
-                &white_move.replace("=","play w").replace("\n\n", "\n"),
-                &mut self.black_connection, &mut black_reader
+                &white_move.replace("=", "play w").replace("\n\n", "\n"),
+                &mut self.black_connection,
+                &mut black_reader,
             );
 
             if black_move == "= pass\n\n" && white_move == "= pass\n\n" {
@@ -111,9 +117,7 @@ fn start(address: &str, setup_commands: Vec<String>) {
                         white_connection: stream,
                     };
                     let setup_commands = setup_commands.clone();
-                    thread::spawn(move || {
-                        game.start(setup_commands);
-                    });
+                    thread::spawn(move || { game.start(setup_commands); });
                 }
             }
             Err(_e) => { /* connection failed */ }

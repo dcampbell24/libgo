@@ -36,9 +36,7 @@ impl Chains {
 
     /// Returns an empty board of Chains.
     pub fn new() -> Self {
-        Chains {
-            chains: Vec::new(),
-        }
+        Chains { chains: Vec::new() }
     }
 
     /// Removes the chain that contains vertex from the set of chains.
@@ -66,9 +64,8 @@ impl Chains {
             }
         }
         // Remove the dead chains before updating liberties to avoid updating dead chains.
-        self.chains.retain(|chain| {
-            chain.player != player || !chain.libs.is_empty()
-        });
+        self.chains
+            .retain(|chain| chain.player != player || !chain.libs.is_empty());
         for vertex in &empty_verts {
             for chain in &mut self.chains {
                 if chain.player != player && chain.filled_libs.remove(vertex) {
