@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::fmt;
 
 use game::chain::Chain;
@@ -175,7 +176,7 @@ impl Board {
     }
 
     fn neighbors(&self, player: Player, vert: Vertex) -> Neighbors {
-        let mut adjacencies = self.matrix.exterior(vert);
+        let mut adjacencies = self.matrix.adjacencies(vert);
         let mut blacks = adjacencies.clone();
         blacks.retain(|v: &Vertex| self.matrix[v] == WEB::Black);
         let mut whites = adjacencies.clone();
@@ -246,7 +247,7 @@ impl Board {
     /// 1. R is surrounded by black stones.
     /// 2. The interior contains only white stones.
     /// 3. The border contains only white stones and empty intersections.
-    pub fn small_enclosed_regions(&self, player: Player) -> Vec<Vec<Vertex>> {
+    pub fn small_enclosed_regions(&self, player: Player) -> Vec<HashSet<Vertex>> {
         let mut exterior_verts: Matrix<bool> = Matrix::with_size(self.size());
         for chain in self.chains.iter() {
             if chain.player == player {
