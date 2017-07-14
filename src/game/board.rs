@@ -6,7 +6,7 @@ use game::chains::Chains;
 use game::player::Player;
 use game::vertex::Vertex;
 use game::web::WEB;
-use game::matrix::Matrix;
+use game::matrix::{Matrix, Node};
 
 /// The compensation in points White gets for going second under Chinese rules.
 pub const CHINESE_KOMI: f64 = 7.5;
@@ -176,7 +176,7 @@ impl Board {
     }
 
     fn neighbors(&self, player: Player, vert: Vertex) -> Neighbors {
-        let mut adjacencies = self.matrix.adjacencies(vert);
+        let mut adjacencies = self.matrix.adjacent_vertexes(vert);
         let mut blacks = adjacencies.clone();
         blacks.retain(|v: &Vertex| self.matrix[v] == WEB::Black);
         let mut whites = adjacencies.clone();
@@ -247,7 +247,7 @@ impl Board {
     /// 1. R is surrounded by black stones.
     /// 2. The interior contains only white stones.
     /// 3. The border contains only white stones and empty intersections.
-    pub fn small_enclosed_regions(&self, player: Player) -> Vec<HashSet<Vertex>> {
+    pub fn small_enclosed_regions(&self, player: Player) -> Vec<HashSet<Node>> {
         let mut exterior_verts: Matrix<bool> = Matrix::with_size(self.size());
         for chain in self.chains.iter() {
             if chain.player == player {
@@ -256,13 +256,12 @@ impl Board {
                 }
             }
         }
-        let regions = self.matrix
-            .get_regions(|vertex| vertex != &WEB::from(player));
+        let regions = self.matrix.get_regions(|node| node != &WEB::from(player));
         regions
             .into_iter()
             .filter(|region| {
-                for vertex in region {
-                    if !exterior_verts[vertex] && self.matrix[vertex] == WEB::Empty {
+                for &node in region.iter() {
+                    if !exterior_verts[node] && self.matrix[node] == WEB::Empty {
                         return false;
                     }
                 }

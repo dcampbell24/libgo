@@ -13,6 +13,10 @@ pub struct Matrix<T: Clone + Debug + Default + PartialEq> {
     vec: Vec<T>,
 }
 
+/// A reference to a location in a Matrix.
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+pub struct Node(usize);
+
 fn vertex_from_index(index: usize, board_size: usize) -> Vertex {
     let x = index % board_size;
     let y = index / board_size;
@@ -24,49 +28,37 @@ fn index_from_vertex(vertex: Vertex, board_size: usize) -> usize {
 }
 
 impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
-    /// Returns the vertex above _vertex_ if it exists.
-    pub fn above(&self, vertex: Vertex) -> Option<Vertex> {
-        if vertex.y + 1 < self.size {
-            Some(Vertex {
-                x: vertex.x,
-                y: vertex.y + 1,
-            })
+    /// Returns the node above _node_ if it exists.
+    pub fn above(&self, node: Node) -> Option<Node> {
+        if node.0 + self.size < self.size * self.size {
+            Some(Node(node.0 + self.size))
         } else {
             None
         }
     }
 
-    /// Returns the vertex below _vertex_ if it exists.
-    pub fn below(&self, vertex: Vertex) -> Option<Vertex> {
-        if vertex.y > 0 {
-            Some(Vertex {
-                x: vertex.x,
-                y: vertex.y - 1,
-            })
+    /// Returns the node below _node_ if it exists.
+    pub fn below(&self, node: Node) -> Option<Node> {
+        if node.0 >= self.size {
+            Some(Node(node.0 - self.size))
         } else {
             None
         }
     }
 
-    /// Returns the vertex left of _vertex_ if it exists.
-    pub fn left_of(&self, vertex: Vertex) -> Option<Vertex> {
-        if vertex.x > 0 {
-            Some(Vertex {
-                x: vertex.x - 1,
-                y: vertex.y,
-            })
+    /// Returns the node left of _node_ if it exists.
+    pub fn left_of(&self, node: Node) -> Option<Node> {
+        if node.0 % self.size > 0 {
+            Some(Node(node.0 - 1))
         } else {
             None
         }
     }
 
-    /// Returns the vertex right of _vertex_ if it exists.
-    pub fn right_of(&self, vertex: Vertex) -> Option<Vertex> {
-        if vertex.x + 1 < self.size {
-            Some(Vertex {
-                x: vertex.x + 1,
-                y: vertex.y,
-            })
+    /// Returns the node right of _node_ if it exists.
+    pub fn right_of(&self, node: Node) -> Option<Node> {
+        if (node.0 + 1) % self.size > 0 {
+            Some(Node(node.0 + 1))
         } else {
             None
         }
@@ -85,23 +77,34 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
             .collect()
     }
 
-    /// Returns all verticies adjacent to vertex.
-    pub fn adjacencies(&self, vertex: Vertex) -> Vec<Vertex> {
+    /// Returns all nodes adjacent to node.
+    pub fn adjacencies(&self, node: Node) -> Vec<Node> {
         let mut adjacencies = Vec::with_capacity(4);
 
-        if let Some(vertex) = self.left_of(vertex) {
-            adjacencies.push(vertex);
+        if let Some(node) = self.left_of(node) {
+            adjacencies.push(node);
         }
-        if let Some(vertex) = self.below(vertex) {
-            adjacencies.push(vertex);
+        if let Some(node) = self.below(node) {
+            adjacencies.push(node);
         }
-        if let Some(vertex) = self.right_of(vertex) {
-            adjacencies.push(vertex);
+        if let Some(node) = self.right_of(node) {
+            adjacencies.push(node);
         }
-        if let Some(vertex) = self.above(vertex) {
-            adjacencies.push(vertex);
+        if let Some(node) = self.above(node) {
+            adjacencies.push(node);
         }
 
+        adjacencies
+    }
+
+    /// Returns all nodes adjacent to node.
+    pub fn adjacent_vertexes(&self, vertex: Vertex) -> Vec<Vertex> {
+        let node = Node(index_from_vertex(vertex, self.size));
+        let nodes = self.adjacencies(node);
+        let mut adjacencies = Vec::with_capacity(nodes.len());
+        for node in nodes {
+            adjacencies.push(vertex_from_index(node.0, self.size));
+        }
         adjacencies
     }
 
@@ -123,23 +126,29 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
         self.size
     }
 
-    /// Returns the largest connected region of verticies for which the test function applied to
-    /// each vertex returns true starting at `vertex`.
-    fn get_region<F: Fn(&T) -> bool>(&self, vertex: Vertex, test: F) -> HashSet<Vertex> {
+    /// Returns the largest connected region of nodes for which the test function applied to
+    /// each node returns true starting at `node`.
+    fn get_region<F: Fn(&T) -> bool>(
+        &self,
+        node: Node,
+        test: F,
+        visited: &mut Vec<bool>,
+    ) -> HashSet<Node> {
+        assert!(visited.len() == self.size * self.size);
+
         let mut passed_test = HashSet::new();
-        let mut visited = HashSet::new();
         let mut queue = Vec::new();
 
-        queue.push(vertex);
-        visited.insert(vertex);
+        queue.push(node);
+        visited[node.0] = true;
 
-        while let Some(vertex) = queue.pop() {
-            if test(&self[&vertex]) {
-                passed_test.insert(vertex);
-                for v in self.adjacencies(vertex) {
-                    if !visited.contains(&v) {
-                        queue.push(v);
-                        visited.insert(v);
+        while let Some(node) = queue.pop() {
+            if test(&self[node]) {
+                passed_test.insert(node);
+                for n in self.adjacencies(node) {
+                    if !visited[n.0] {
+                        queue.push(n);
+                        visited[n.0] = true;
                     }
                 }
             }
@@ -150,22 +159,18 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
 
     /// Returns all of the largest connected regions of verticies for which the test function
     /// applied to each vertex returns true.
-    pub fn get_regions<F: Fn(&T) -> bool>(&self, test: F) -> Vec<HashSet<Vertex>> {
+    pub fn get_regions<F: Fn(&T) -> bool>(&self, test: F) -> Vec<HashSet<Node>> {
+        let mut visited = vec![false; self.size * self.size];
         let mut regions = Vec::new();
-        let mut visited = HashSet::new();
 
         for i in 0..(self.size() * self.size()) {
-            let vertex = vertex_from_index(i, self.size);
-            if visited.contains(&vertex) {
+            if visited[i] {
                 continue;
             }
-            visited.insert(vertex);
 
-            if test(&self[&vertex]) {
-                let region = self.get_region(vertex, &test);
-                for v in &region {
-                    visited.insert(*v);
-                }
+            let node = Node(i);
+            if test(&self[node]) {
+                let region = self.get_region(node, &test, &mut visited);
                 regions.push(region)
             }
         }
@@ -189,11 +194,24 @@ impl<'a, T: Clone + Debug + Default + PartialEq> Index<&'a Vertex> for Matrix<T>
     }
 }
 
+impl<T: Clone + Debug + Default + PartialEq> Index<Node> for Matrix<T> {
+    type Output = T;
+    fn index(&self, node: Node) -> &Self::Output {
+        &self.vec[node.0]
+    }
+}
+
 impl<'a, T: Clone + Debug + Default + PartialEq> IndexMut<&'a Vertex> for Matrix<T> {
     fn index_mut(&mut self, vertex: &Vertex) -> &mut T {
         self.vec
             .get_mut(index_from_vertex(*vertex, self.size))
             .expect("vertex not in the matrix")
+    }
+}
+
+impl<T: Clone + Debug + Default + PartialEq> IndexMut<Node> for Matrix<T> {
+    fn index_mut(&mut self, node: Node) -> &mut Self::Output {
+        &mut self.vec[node.0]
     }
 }
 
@@ -204,28 +222,33 @@ mod tests {
     #[test]
     fn get_region() {
         let mut matrix = Matrix::with_size(3);
-        let center = Vertex { x: 1, y: 1 };
-        let west = Vertex { x: 0, y: 1 };
-        let north_east_corner = Vertex { x: 2, y: 2 };
-        matrix[&center] = true;
-        matrix[&west] = true;
-        matrix[&north_east_corner] = true;
+        let center = Node(4);
+        let west = Node(3);
+        let north_east_corner = Node(8);
+        matrix[center] = true;
+        matrix[west] = true;
+        matrix[north_east_corner] = true;
 
-        let region = matrix.get_region(center, |&value| value);
+        let mut visited = vec![false; 9];
+        let region = matrix.get_region(center, |&value| value, &mut visited);
         assert_eq!(region, vec![center, west].into_iter().collect());
-        let region = matrix.get_region(north_east_corner, |&value| value);
+
+        let mut visited = vec![false; 9];
+        let region = matrix.get_region(north_east_corner, |&value| value, &mut visited);
         assert_eq!(region, vec![north_east_corner].into_iter().collect());
-        let region = matrix.get_region(Vertex { x: 0, y: 0 }, |&value| value);
+
+        let mut visited = vec![false; 9];
+        let region = matrix.get_region(Node(0), |&value| value, &mut visited);
         assert_eq!(region, HashSet::new());
     }
 
     #[test]
     fn get_regions() {
         let mut matrix = Matrix::with_size(3);
-        let center = Vertex { x: 1, y: 1 };
-        let north_east_corner = Vertex { x: 2, y: 2 };
-        matrix[&center] = true;
-        matrix[&north_east_corner] = true;
+        let center = Node(4);
+        let north_east_corner = Node(8);
+        matrix[center] = true;
+        matrix[north_east_corner] = true;
 
         let region = matrix.get_regions(|&value| value);
         assert_eq!(
