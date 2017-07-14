@@ -65,6 +65,20 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
         }
     }
 
+    /// Converts a vertex into node in the matrix. Returns None if the vertex is not in the matrix.
+    pub fn node_from_vertex(&self, vertex: Vertex) -> Option<Node> {
+        if vertex.x < self.size && vertex.y < self.size {
+            Some(Node(index_from_vertex(vertex, self.size)))
+        } else {
+            None
+        }
+    }
+
+    /// Returns the vertex of a node.
+    pub fn vertex_from_node(&self, node: Node) -> Vertex {
+        vertex_from_index(node.0, self.size)
+    }
+
     /// Returns a set of all of the empty verticies on the board.
     pub fn verts_in_state(&self, in_state: T) -> Vec<Vertex> {
         self.vec
@@ -100,11 +114,11 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
 
     /// Returns all nodes adjacent to node.
     pub fn adjacent_vertices(&self, vertex: Vertex) -> Vec<Vertex> {
-        let node = Node(index_from_vertex(vertex, self.size));
+        let node = self.node_from_vertex(vertex).expect("vertex not in matrix");
         let nodes = self.adjacencies(node);
         let mut adjacencies = Vec::with_capacity(nodes.len());
         for node in nodes {
-            adjacencies.push(vertex_from_index(node.0, self.size));
+            adjacencies.push(self.vertex_from_node(node));
         }
         adjacencies
     }
