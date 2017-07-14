@@ -176,7 +176,7 @@ impl Board {
     }
 
     fn neighbors(&self, player: Player, vert: Vertex) -> Neighbors {
-        let mut adjacencies = self.matrix.adjacent_vertexes(vert);
+        let mut adjacencies = self.matrix.adjacent_vertices(vert);
         let mut blacks = adjacencies.clone();
         blacks.retain(|v: &Vertex| self.matrix[v] == WEB::Black);
         let mut whites = adjacencies.clone();
@@ -268,6 +268,17 @@ impl Board {
                 true
             })
             .collect()
+    }
+
+    /// The score according to ancient rules (count of black stones minus count of white stones).
+    pub fn score_ancient(&self) -> i32 {
+        self.matrix.values().fold(0, |acc, &state| {
+            match state {
+                WEB::Empty => acc,
+                WEB::Black => acc + 1,
+                WEB::White => acc - 1,
+            }
+        })
     }
 
     /// Returns a human readable ASCII representation of the board.

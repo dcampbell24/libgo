@@ -5,7 +5,7 @@ use std::str::FromStr;
 use game::{Game, Handicap};
 use game::board::Move;
 use game::player::Player;
-use game::vertex::{Vertex, Vertexes};
+use game::vertex::{Vertex, Vertices};
 use gtp::command::Command;
 use gtp::response::{CommandResult, Response};
 
@@ -62,7 +62,7 @@ fn gtp_place_handicap(args: &Vec<String>, game: &mut Game, handicap: Handicap) -
         }
     };
     game.place_handicap(stones, handicap)
-        .map(|verts| Some(Vertexes(verts).to_string()))
+        .map(|verts| Some(Vertices(verts).to_string()))
 }
 
 fn gtp_play(args: &Vec<String>, game: &mut Game) -> CommandResult {

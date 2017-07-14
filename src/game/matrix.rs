@@ -3,6 +3,7 @@
 use std::collections::HashSet;
 use std::fmt::Debug;
 use std::ops::{Index, IndexMut};
+use std::slice::Iter;
 
 use game::vertex::Vertex;
 
@@ -98,7 +99,7 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
     }
 
     /// Returns all nodes adjacent to node.
-    pub fn adjacent_vertexes(&self, vertex: Vertex) -> Vec<Vertex> {
+    pub fn adjacent_vertices(&self, vertex: Vertex) -> Vec<Vertex> {
         let node = Node(index_from_vertex(vertex, self.size));
         let nodes = self.adjacencies(node);
         let mut adjacencies = Vec::with_capacity(nodes.len());
@@ -182,6 +183,11 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
         for vertex in &mut self.vec {
             *vertex = T::default();
         }
+    }
+
+    /// Returns all of the values stored in the Matrix.
+    pub fn values(&self) -> Iter<T> {
+        self.vec.iter()
     }
 }
 

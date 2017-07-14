@@ -61,11 +61,11 @@ impl FromStr for Vertex {
     }
 }
 
-/// A collection of Vertexes. This is a wrapper type for providing traits such as Display.
+/// A collection of Vertices. This is a wrapper type for providing traits such as Display.
 #[derive(Debug)]
-pub struct Vertexes(pub Vec<Vertex>);
+pub struct Vertices(pub Vec<Vertex>);
 
-impl fmt::Display for Vertexes {
+impl fmt::Display for Vertices {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for (index, vert) in self.0.iter().enumerate() {
             if index == 0 {
