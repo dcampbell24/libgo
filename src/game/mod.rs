@@ -16,8 +16,6 @@ pub mod matrix;
 pub mod player;
 /// A structure for storing the x and y coordinates of a board cell.
 pub mod vertex;
-/// White, Empty, or black.
-pub mod web;
 
 use rand::{self, Rng};
 use std::collections::HashSet;

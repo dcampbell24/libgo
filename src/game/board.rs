@@ -5,7 +5,6 @@ use game::chain::Chain;
 use game::chains::Chains;
 use game::player::Player;
 use game::vertex::Vertex;
-use game::web::WEB;
 use game::matrix::{Matrix, Node};
 
 /// The compensation in points White gets for going second under Chinese rules.
@@ -18,7 +17,7 @@ const BOARD_LETTERS: &'static str = "ABCDEFGHJKLMNOPQRST";
 #[derive(Clone)]
 pub struct Board {
     /// A matrix holding the state of each vertex on the board.
-    matrix: Matrix<WEB>,
+    matrix: Matrix<State>,
     chains: Chains,
 }
 
@@ -130,14 +129,14 @@ impl Board {
     /// Returns true if the vertex exists and is empty.
     pub fn is_vacant(&self, vertex: Vertex) -> bool {
         match self.matrix.get(vertex) {
-            Some(web) => web == &WEB::Empty,
+            Some(&state) => state == State::Empty,
             None => false,
         }
     }
 
     /// Returns a list of all the empty verticies.
     pub fn empty_verts(&self) -> Vec<Vertex> {
-        self.matrix.verts_in_state(WEB::Empty)
+        self.matrix.verts_in_state(State::Empty)
     }
 
     /// Returns a list of all the **unconditionally alive** chains on the board.
@@ -178,10 +177,10 @@ impl Board {
     fn neighbors(&self, player: Player, vert: Vertex) -> Neighbors {
         let mut adjacencies = self.matrix.adjacent_vertices(vert);
         let mut blacks = adjacencies.clone();
-        blacks.retain(|v: &Vertex| self.matrix[v] == WEB::Black);
+        blacks.retain(|v: &Vertex| self.matrix[v] == State::Black);
         let mut whites = adjacencies.clone();
-        whites.retain(|v: &Vertex| self.matrix[v] == WEB::White);
-        adjacencies.retain(|v: &Vertex| self.matrix[v] == WEB::Empty);
+        whites.retain(|v: &Vertex| self.matrix[v] == State::White);
+        adjacencies.retain(|v: &Vertex| self.matrix[v] == State::Empty);
 
         match player {
             Player::White => Neighbors {
@@ -224,7 +223,7 @@ impl Board {
     }
 
     fn add_stone(&mut self, player: Player, vertex: &Vertex) {
-        self.matrix[vertex] = WEB::from(player);
+        self.matrix[vertex] = State::from(player);
         self.chains.add_stone(player, vertex);
     }
 
@@ -237,7 +236,7 @@ impl Board {
     fn remove_captures(&mut self, capturer: Player) {
         let empty_verts = self.chains.remove_dead_chains(capturer.enemy());
         for v in &empty_verts {
-            self.matrix[v] = WEB::Empty;
+            self.matrix[v] = State::Empty;
         }
     }
 
@@ -256,12 +255,12 @@ impl Board {
                 }
             }
         }
-        let regions = self.matrix.get_regions(|node| node != &WEB::from(player));
+        let regions = self.matrix.get_regions(|node| node != &State::from(player));
         regions
             .into_iter()
             .filter(|region| {
                 for &node in region.iter() {
-                    if !exterior_verts[node] && self.matrix[node] == WEB::Empty {
+                    if !exterior_verts[node] && self.matrix[node] == State::Empty {
                         return false;
                     }
                 }
@@ -274,9 +273,9 @@ impl Board {
     pub fn score_ancient(&self) -> i32 {
         self.matrix.values().fold(0, |acc, &state| {
             match state {
-                WEB::Empty => acc,
-                WEB::Black => acc + 1,
-                WEB::White => acc - 1,
+                State::Empty => acc,
+                State::Black => acc + 1,
+                State::White => acc - 1,
             }
         })
     }
@@ -294,15 +293,15 @@ impl Board {
                 board.push(' ');
                 let vertex = Vertex { x: x, y: y };
                 let c = match self.matrix[&vertex] {
-                    WEB::Empty => {
+                    State::Empty => {
                         if star_points.contains(&vertex) {
                             '+'
                         } else {
                             '.'
                         }
                     }
-                    WEB::Black => 'x',
-                    WEB::White => 'o',
+                    State::Black => 'x',
+                    State::White => 'o',
                 };
                 board.push(c);
             }
@@ -343,4 +342,30 @@ pub struct Neighbors {
     pub evil: Vec<Vertex>,
     /// No stones.
     pub empty: Vec<Vertex>,
+}
+
+/// The possible board states.
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+pub enum State {
+    /// A stone from second player.
+    White = -1,
+    /// No stone.
+    Empty = 0,
+    /// A stone from the first player.
+    Black = 1,
+}
+
+impl Default for State {
+    fn default() -> Self {
+        State::Empty
+    }
+}
+
+impl From<Player> for State {
+    fn from(player: Player) -> Self {
+        match player {
+            Player::White => State::White,
+            Player::Black => State::Black,
+        }
+    }
 }

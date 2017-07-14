@@ -8,11 +8,10 @@ extern crate libgo;
 mod tests {
     use test::Bencher;
     use libgo::game::Game;
-    use libgo::game::board::{Board, Move};
+    use libgo::game::board::{Board, Move, State};
     use libgo::game::matrix::Matrix;
     use libgo::game::player::Player;
     use libgo::game::vertex::Vertex;
-    use libgo::game::web::WEB;
 
     fn black_checkered_game() -> Game {
         let mut game = Game::new();
@@ -32,12 +31,12 @@ mod tests {
         game
     }
 
-    fn black_checkered_matrix(size: usize) -> Matrix<WEB> {
+    fn black_checkered_matrix(size: usize) -> Matrix<State> {
         let mut matrix = Matrix::with_size(size);
         for y in 0..matrix.size() {
             for x in 0..matrix.size() {
                 if (y % 2 == 0 && x % 2 == 0) || (y % 2 != 0 && x % 2 != 0) {
-                    matrix[&Vertex { x: x, y: y }] = WEB::Black;
+                    matrix[&Vertex { x: x, y: y }] = State::Black;
                 }
             }
         }
@@ -92,14 +91,14 @@ mod tests {
 
     #[bench]
     fn bench_split_by_black_empty_board(b: &mut Bencher) {
-        let matrix: Matrix<WEB> = Matrix::with_size(19);
-        b.iter(|| matrix.get_regions(|vertex| vertex != &WEB::Black));
+        let matrix: Matrix<State> = Matrix::with_size(19);
+        b.iter(|| matrix.get_regions(|vertex| vertex != &State::Black));
     }
 
     #[bench]
     fn bench_split_by_black_checkered_board(b: &mut Bencher) {
-        let matrix: Matrix<WEB> = black_checkered_matrix(19);
-        b.iter(|| matrix.get_regions(|vertex| vertex != &WEB::Black));
+        let matrix: Matrix<State> = black_checkered_matrix(19);
+        b.iter(|| matrix.get_regions(|vertex| vertex != &State::Black));
     }
 
     #[bench]

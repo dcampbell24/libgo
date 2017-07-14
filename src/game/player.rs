@@ -1,5 +1,6 @@
 use std::fmt;
-use game::web::WEB;
+
+use game::board::State;
 
 /// Black or White.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -30,12 +31,12 @@ impl fmt::Display for Player {
     }
 }
 
-impl From<WEB> for Player {
-    fn from(state: WEB) -> Self {
+impl From<State> for Player {
+    fn from(state: State) -> Self {
         match state {
-            WEB::Black => Player::Black,
-            WEB::White => Player::White,
-            WEB::Empty => panic!("can't convert from {:?} to Player", state),
+            State::Black => Player::Black,
+            State::White => Player::White,
+            State::Empty => panic!("can't convert from {:?} to Player", state),
         }
     }
 }
