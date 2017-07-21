@@ -112,17 +112,6 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
         adjacencies
     }
 
-    /// Returns all nodes adjacent to node.
-    pub fn adjacent_vertices(&self, vertex: Vertex) -> Vec<Vertex> {
-        let node = self.node_from_vertex(vertex).expect("vertex not in matrix");
-        let nodes = self.adjacencies(node);
-        let mut adjacencies = Vec::with_capacity(nodes.len());
-        for node in nodes {
-            adjacencies.push(self.vertex_from_node(node));
-        }
-        adjacencies
-    }
-
     /// Returns the cell state at a given vertex or none if the vertex is not in the matrix.
     pub fn get(&self, vertex: Vertex) -> Option<&T> {
         self.vec.get(index_from_vertex(vertex, self.size))
