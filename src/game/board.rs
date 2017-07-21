@@ -146,7 +146,7 @@ impl Board {
     ///
     /// A chain is **unconditionally alive** or **pass alive** if there is no sequence of moves
     /// solely from the opponent that can capture the chain.
-    pub fn pass_alive_chains(&self) -> Vec<Vertex> {
+    pub fn pass_alive_chains(&self) -> Vec<Node> {
         unimplemented!();
     }
 
@@ -174,13 +174,13 @@ impl Board {
         }
     }
 
-    fn neighbors(&self, player: Player, vert: Vertex) -> Neighbors {
-        let mut adjacencies = self.matrix.adjacent_vertices(vert);
+    fn neighbors(&self, player: Player, node: Node) -> Neighbors {
+        let mut adjacencies = self.matrix.adjacencies(node);
         let mut blacks = adjacencies.clone();
-        blacks.retain(|v: &Vertex| self.matrix[v] == State::Black);
+        blacks.retain(|&node| self.matrix[node] == State::Black);
         let mut whites = adjacencies.clone();
-        whites.retain(|v: &Vertex| self.matrix[v] == State::White);
-        adjacencies.retain(|v: &Vertex| self.matrix[v] == State::Empty);
+        whites.retain(|&node| self.matrix[node] == State::White);
+        adjacencies.retain(|&node| self.matrix[node] == State::Empty);
 
         match player {
             Player::White => Neighbors {
@@ -198,19 +198,20 @@ impl Board {
 
     /// Updates the board with a move. The move is assumed to be valid and legal.
     pub fn place_stone(&mut self, player: Player, vertex: Vertex) {
-        self.matrix[&vertex] = State::from(player);
+        let node = self.matrix.node_from_vertex(vertex).expect("invlaid vertex");
+        self.matrix[node] = State::from(player);
 
         // Remove the liberty from chains on the board.
         for chain in &mut self.chains {
-            if chain.player != player && chain.libs.remove(&vertex) {
-                chain.filled_libs.insert(vertex);
+            if chain.player != player && chain.libs.remove(&node) {
+                chain.filled_libs.insert(node);
             }
         }
 
-        let neighbors = self.neighbors(player, vertex);
-        let mut new_chain = Chain::new(player, vertex, &neighbors);
-        for vert in &neighbors.good {
-            if let Some(old_chain) = self.remove_chain(vert) {
+        let neighbors = self.neighbors(player, node);
+        let mut new_chain = Chain::new(player, node, &neighbors);
+        for &n in &neighbors.good {
+            if let Some(old_chain) = self.remove_chain(n) {
                 new_chain.eat(old_chain);
             }
         }
@@ -223,9 +224,9 @@ impl Board {
 
     /// Removes all enemy Chains from the board that have 0 liberties.
     fn remove_captures(&mut self, capturer: Player) {
-        let empty_verts = self.remove_dead_chains(capturer.enemy());
-        for v in &empty_verts {
-            self.matrix[v] = State::Empty;
+        let empty_nodes = self.remove_dead_chains(capturer.enemy());
+        for n in empty_nodes.into_iter() {
+            self.matrix[n] = State::Empty;
         }
     }
 
@@ -253,8 +254,8 @@ impl Board {
         let mut exterior_verts: Matrix<bool> = Matrix::with_size(self.size());
         for chain in self.chains.iter() {
             if chain.player == player {
-                for vertex in chain.libs.iter().chain(chain.filled_libs.iter()) {
-                    exterior_verts[vertex] = true;
+                for &node in chain.libs.iter().chain(chain.filled_libs.iter()) {
+                    exterior_verts[node] = true;
                 }
             }
         }
@@ -316,11 +317,11 @@ impl Board {
 
     // Chains //
 
-    /// Removes the chain that contains vertex from the set of chains.
-    fn remove_chain(&mut self, vertex: &Vertex) -> Option<Chain> {
+    /// Removes the chain that contains node from the set of chains.
+    fn remove_chain(&mut self, node: Node) -> Option<Chain> {
         let mut idx = None;
         for (i, chain) in self.chains.iter().enumerate() {
-            if chain.verts.contains(vertex) {
+            if chain.verts.contains(&node) {
                 idx = Some(i);
                 break;
             }
@@ -333,24 +334,24 @@ impl Board {
     }
 
     /// Removes all chains with zero liberties of a chosen player and returns their verticies.
-    fn remove_dead_chains(&mut self, player: Player) -> Vec<Vertex> {
-        let mut empty_verts = Vec::new();
+    fn remove_dead_chains(&mut self, player: Player) -> Vec<Node> {
+        let mut empty_nodes = Vec::new();
         for chain in &self.chains {
             if chain.player == player && chain.libs.is_empty() {
-                empty_verts.extend(&chain.verts);
+                empty_nodes.extend(&chain.verts);
             }
         }
         // Remove the dead chains before updating liberties to avoid updating dead chains.
         self.chains
             .retain(|chain| chain.player != player || !chain.libs.is_empty());
-        for vertex in &empty_verts {
+        for node in &empty_nodes {
             for chain in &mut self.chains {
-                if chain.player != player && chain.filled_libs.remove(vertex) {
-                    chain.libs.insert(*vertex);
+                if chain.player != player && chain.filled_libs.remove(node) {
+                    chain.libs.insert(*node);
                 }
             }
         }
-        empty_verts
+        empty_nodes
     }
 }
 
@@ -375,15 +376,15 @@ pub struct Move {
     pub vertex: Option<Vertex>,
 }
 
-/// A structure holding the verticies neighboring a vertex, chain, or region, grouped by state.
+/// A structure holding the nodes neighboring a node, chain, or region, grouped by state.
 #[derive(Clone, Debug)]
 pub struct Neighbors {
     /// The player's stones.
-    pub good: Vec<Vertex>,
+    pub good: Vec<Node>,
     /// The opponent's stones.
-    pub evil: Vec<Vertex>,
+    pub evil: Vec<Node>,
     /// No stones.
-    pub empty: Vec<Vertex>,
+    pub empty: Vec<Node>,
 }
 
 /// The possible board states.
@@ -418,21 +419,21 @@ struct Chain {
     /// The state all of the verticies of the chain are in.
     player: Player,
     /// The set of verticies in the chain.
-    verts: HashSet<Vertex>,
+    verts: HashSet<Node>,
     /// The set of neighboring verticies that are empty.
-    libs: HashSet<Vertex>,
+    libs: HashSet<Node>,
     /// The set of neighboring verticies that are filled (by the opponent).
-    filled_libs: HashSet<Vertex>,
+    filled_libs: HashSet<Node>,
 }
 
 impl Chain {
-    /// Create a new chain initialized with a vertex and its neighbors.
-    pub fn new(player: Player, vertex: Vertex, neighbors: &Neighbors) -> Self {
+    /// Create a new chain initialized with a node and its neighbors.
+    pub fn new(player: Player, node: Node, neighbors: &Neighbors) -> Self {
         let mut verts = HashSet::new();
         let mut libs = HashSet::new();
         let mut filled_libs = HashSet::new();
 
-        verts.insert(vertex);
+        verts.insert(node);
         libs.extend(&neighbors.empty);
         filled_libs.extend(&neighbors.evil);
 
