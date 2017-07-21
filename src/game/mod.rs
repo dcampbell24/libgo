@@ -4,12 +4,6 @@
 /// arrangement.
 pub mod board;
 
-/// A connected set of verticies in the same state.
-pub mod chain;
-
-/// A structure holding all of the chains on a board.
-pub mod chains;
-
 /// A structure that holds the state all of the verticies of the board in a matrix.
 pub mod matrix;
 /// Black or White.
