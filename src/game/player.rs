@@ -1,7 +1,5 @@
 use std::fmt;
 
-use game::board::State;
-
 /// Black or White.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Player {
@@ -28,15 +26,5 @@ impl fmt::Display for Player {
             Player::White => "white",
         };
         write!(f, "{}", color)
-    }
-}
-
-impl From<State> for Player {
-    fn from(state: State) -> Self {
-        match state {
-            State::Black => Player::Black,
-            State::White => Player::White,
-            State::Empty => panic!("can't convert from {:?} to Player", state),
-        }
     }
 }
