@@ -181,7 +181,7 @@ impl Board {
 
         // Remove the liberty from chains on the board.
         for chain in &mut self.chains {
-            if chain.player != player && chain.libs.remove(&node) {
+            if chain.libs.remove(&node) && chain.player != player {
                 chain.filled_libs.insert(node);
             }
         }
