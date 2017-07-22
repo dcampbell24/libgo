@@ -5,8 +5,6 @@ use game::player::Player;
 use game::vertex::Vertex;
 use game::matrix::{Matrix, Node};
 
-/// The compensation in points White gets for going second under Chinese rules.
-pub const CHINESE_KOMI: f64 = 7.5;
 const BOARD_MAX_SIZE: usize = 19;
 const BOARD_MIN_SIZE: usize = 1;
 const BOARD_LETTERS: &'static str = "ABCDEFGHJKLMNOPQRST";

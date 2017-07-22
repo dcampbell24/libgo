@@ -14,11 +14,12 @@ pub mod vertex;
 use rand::{self, Rng};
 use std::collections::HashSet;
 
-use game::board::CHINESE_KOMI;
 use game::board::{Board, Move};
 use game::player::Player;
 use game::vertex::Vertex;
 
+/// The compensation in points White gets for going second under Chinese rules.
+pub const CHINESE_KOMI: f64 = 7.5;
 const DEFAULT_BOARD_SIZE: usize = 19;
 const MAX_MOVES: usize = 512;
 
