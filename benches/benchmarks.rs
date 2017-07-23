@@ -72,14 +72,26 @@ mod tests {
     }
 
     #[bench]
-    fn bench_split_by_black_empty_board(b: &mut Bencher) {
+    fn bench_not_black_regions_on_empty_board(b: &mut Bencher) {
         let matrix: Matrix<State> = Matrix::with_size(19);
         b.iter(|| matrix.get_regions(|vertex| vertex != &State::Black));
     }
 
     #[bench]
-    fn bench_split_by_black_checkered_board(b: &mut Bencher) {
+    fn bench_not_black_regions_on_black_checkered_board(b: &mut Bencher) {
         let matrix: Matrix<State> = black_checkered_matrix(19);
         b.iter(|| matrix.get_regions(|vertex| vertex != &State::Black));
+    }
+
+    #[bench]
+    fn bench_regions_by_value_on_empty_board(b: &mut Bencher) {
+        let matrix: Matrix<State> = Matrix::with_size(19);
+        b.iter(|| matrix.get_regions_by_value());
+    }
+
+    #[bench]
+    fn bench_regions_by_value_on_black_checkered_board(b: &mut Bencher) {
+        let matrix: Matrix<State> = black_checkered_matrix(19);
+        b.iter(|| matrix.get_regions_by_value());
     }
 }

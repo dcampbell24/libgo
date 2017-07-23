@@ -132,17 +132,11 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
 
     /// Returns the largest connected region of nodes for which the test function applied to
     /// each node returns true starting at `node`.
-    fn get_region<F: Fn(&T) -> bool>(
-        &self,
-        node: Node,
-        test: F,
-        visited: &mut Vec<bool>,
-    ) -> Region {
-        assert!(visited.len() == self.size * self.size);
-
+    fn get_region<F: Fn(&T) -> bool>(&self, node: Node, test: F) -> Region {
         let mut passed_test = HashSet::new();
         let mut adjacencies = HashSet::new();
         let mut queue = Vec::new();
+        let mut visited = vec![false; self.size * self.size];
 
         queue.push(node);
         visited[node.0] = true;
@@ -181,9 +175,32 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
 
             let node = Node(i);
             if test(&self[node]) {
-                let region = self.get_region(node, &test, &mut visited);
+                let region = self.get_region(node, &test);
+                for n in &region.nodes {
+                    visited[n.0] = true;
+                }
                 regions.push(region)
             }
+        }
+        regions
+    }
+
+    /// Returns all of the largest connected regions of verticies that are equal to each other.
+    pub fn get_regions_by_value(&self) -> Vec<Region> {
+        let mut visited = vec![false; self.size * self.size];
+        let mut regions = Vec::new();
+
+        for i in 0..(self.size() * self.size()) {
+            if visited[i] {
+                continue;
+            }
+
+            let node = Node(i);
+            let region = self.get_region(node, |value| value == &self[node]);
+            for n in &region.nodes {
+                visited[n.0] = true;
+            }
+            regions.push(region)
         }
         regions
     }
@@ -248,6 +265,7 @@ pub struct Region {
 }
 
 impl Region {
+    /// Returns an iterator over all of the nodes in the region.
     pub fn nodes(&self) -> hash_set::Iter<Node> {
         self.nodes.iter()
     }
@@ -257,7 +275,12 @@ impl Region {
 mod tests {
     use super::*;
 
-    static TEST_MATRIX: [u32; 9] = [
+    static TEST_MATRIX_2: [u32; 4] = [
+        0, 0,
+        1, 1,
+    ];
+
+    static TEST_MATRIX_3: [u32; 9] = [
         0, 0, 1,
         1, 1, 0,
         0, 0, 0,
@@ -265,32 +288,40 @@ mod tests {
 
     #[test]
     fn get_region() {
-        let matrix = Matrix::from(TEST_MATRIX.to_vec());
+        let matrix = Matrix::from(TEST_MATRIX_3.to_vec());
 
-        let mut visited = vec![false; 9];
-        let region = matrix.get_region(Node(4), |&value| value == 1, &mut visited);
+        let region = matrix.get_region(Node(4), |&value| value == 1);
         assert_eq!(region.nodes, vec![Node(3), Node(4)].into_iter().collect());
         assert_eq!(region.adjacencies, vec![Node(0), Node(1), Node(5), Node(6), Node(7)].into_iter().collect());
 
-        let mut visited = vec![false; 9];
-        let region = matrix.get_region(Node(2), |&value| value == 1, &mut visited);
+        let region = matrix.get_region(Node(2), |&value| value == 1);
         assert_eq!(region.nodes, vec![Node(2)].into_iter().collect());
         assert_eq!(region.adjacencies, vec![Node(1), Node(5)].into_iter().collect());
 
 
-        let mut visited = vec![false; 9];
-        let region = matrix.get_region(Node(8), |&value| value == 1, &mut visited);
+        let region = matrix.get_region(Node(8), |&value| value == 1);
         assert_eq!(region.nodes, HashSet::new());
         assert_eq!(region.adjacencies, HashSet::new());
     }
 
     #[test]
     fn get_regions() {
-        let matrix = Matrix::from(TEST_MATRIX.to_vec());
+        let matrix = Matrix::from(TEST_MATRIX_3.to_vec());
 
         let regions = matrix.get_regions(|&value| value == 1);
         assert_eq!(regions.len(), 2);
         assert_eq!(regions[0].nodes, vec![Node(2)].into_iter().collect());
         assert_eq!(regions[1].nodes, vec![Node(3), Node(4)].into_iter().collect());
+    }
+
+    #[test]
+    fn partition_by_value() {
+        let matrix = Matrix::from(TEST_MATRIX_2.to_vec());
+        let regions = matrix.get_regions_by_value();
+        assert_eq!(regions.len(), 2);
+        assert_eq!(regions[0].nodes, vec![Node(0), Node(1)].into_iter().collect());
+        assert_eq!(regions[1].nodes, vec![Node(2), Node(3)].into_iter().collect());
+        assert_eq!(regions[0].adjacencies, vec![Node(2), Node(3)].into_iter().collect());
+        assert_eq!(regions[1].adjacencies, vec![Node(0), Node(1)].into_iter().collect());
     }
 }
