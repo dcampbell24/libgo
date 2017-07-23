@@ -1,9 +1,9 @@
 //! A generic Matrix module specilized for holding Go Board state.
 
-use std::collections::HashSet;
+use std::collections::{hash_set, HashSet};
 use std::fmt::Debug;
 use std::ops::{Index, IndexMut};
-use std::slice::Iter;
+use std::slice;
 
 use game::vertex::Vertex;
 
@@ -137,10 +137,11 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
         node: Node,
         test: F,
         visited: &mut Vec<bool>,
-    ) -> HashSet<Node> {
+    ) -> Region {
         assert!(visited.len() == self.size * self.size);
 
         let mut passed_test = HashSet::new();
+        let mut adjacencies = HashSet::new();
         let mut queue = Vec::new();
 
         queue.push(node);
@@ -155,15 +156,21 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
                         visited[n.0] = true;
                     }
                 }
+            } else {
+                adjacencies.insert(node);
             }
         }
 
-        passed_test
+        if passed_test.is_empty() {
+            adjacencies.clear();
+        }
+
+        Region { nodes: passed_test, adjacencies }
     }
 
     /// Returns all of the largest connected regions of verticies for which the test function
     /// applied to each vertex returns true.
-    pub fn get_regions<F: Fn(&T) -> bool>(&self, test: F) -> Vec<HashSet<Node>> {
+    pub fn get_regions<F: Fn(&T) -> bool>(&self, test: F) -> Vec<Region> {
         let mut visited = vec![false; self.size * self.size];
         let mut regions = Vec::new();
 
@@ -189,7 +196,7 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
     }
 
     /// Returns all of the values stored in the Matrix.
-    pub fn values(&self) -> Iter<T> {
+    pub fn values(&self) -> slice::Iter<T> {
         self.vec.iter()
     }
 }
@@ -224,48 +231,66 @@ impl<T: Clone + Debug + Default + PartialEq> IndexMut<Node> for Matrix<T> {
     }
 }
 
+
+impl<T: Clone + Debug + Default + PartialEq> From<Vec<T>> for Matrix<T> {
+    fn from(vec: Vec<T>) -> Self {
+        let size = (vec.len() as f64).sqrt() as usize;
+        Matrix { size, vec }
+    }
+}
+
+
+/// A set of connected nodes in the matrix and their adjacencies.
+#[derive(Debug, PartialEq)]
+pub struct Region {
+    nodes: HashSet<Node>,
+    adjacencies: HashSet<Node>,
+}
+
+impl Region {
+    pub fn nodes(&self) -> hash_set::Iter<Node> {
+        self.nodes.iter()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
+    static TEST_MATRIX: [u32; 9] = [
+        0, 0, 1,
+        1, 1, 0,
+        0, 0, 0,
+    ];
+
     #[test]
     fn get_region() {
-        let mut matrix = Matrix::with_size(3);
-        let center = Node(4);
-        let west = Node(3);
-        let north_east_corner = Node(8);
-        matrix[center] = true;
-        matrix[west] = true;
-        matrix[north_east_corner] = true;
+        let matrix = Matrix::from(TEST_MATRIX.to_vec());
 
         let mut visited = vec![false; 9];
-        let region = matrix.get_region(center, |&value| value, &mut visited);
-        assert_eq!(region, vec![center, west].into_iter().collect());
+        let region = matrix.get_region(Node(4), |&value| value == 1, &mut visited);
+        assert_eq!(region.nodes, vec![Node(3), Node(4)].into_iter().collect());
+        assert_eq!(region.adjacencies, vec![Node(0), Node(1), Node(5), Node(6), Node(7)].into_iter().collect());
 
         let mut visited = vec![false; 9];
-        let region = matrix.get_region(north_east_corner, |&value| value, &mut visited);
-        assert_eq!(region, vec![north_east_corner].into_iter().collect());
+        let region = matrix.get_region(Node(2), |&value| value == 1, &mut visited);
+        assert_eq!(region.nodes, vec![Node(2)].into_iter().collect());
+        assert_eq!(region.adjacencies, vec![Node(1), Node(5)].into_iter().collect());
+
 
         let mut visited = vec![false; 9];
-        let region = matrix.get_region(Node(0), |&value| value, &mut visited);
-        assert_eq!(region, HashSet::new());
+        let region = matrix.get_region(Node(8), |&value| value == 1, &mut visited);
+        assert_eq!(region.nodes, HashSet::new());
+        assert_eq!(region.adjacencies, HashSet::new());
     }
 
     #[test]
     fn get_regions() {
-        let mut matrix = Matrix::with_size(3);
-        let center = Node(4);
-        let north_east_corner = Node(8);
-        matrix[center] = true;
-        matrix[north_east_corner] = true;
+        let matrix = Matrix::from(TEST_MATRIX.to_vec());
 
-        let region = matrix.get_regions(|&value| value);
-        assert_eq!(
-            region,
-            vec![
-                vec![center].into_iter().collect(),
-                vec![north_east_corner].into_iter().collect(),
-            ]
-        );
+        let regions = matrix.get_regions(|&value| value == 1);
+        assert_eq!(regions.len(), 2);
+        assert_eq!(regions[0].nodes, vec![Node(2)].into_iter().collect());
+        assert_eq!(regions[1].nodes, vec![Node(3), Node(4)].into_iter().collect());
     }
 }

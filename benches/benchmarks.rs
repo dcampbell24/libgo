@@ -13,24 +13,6 @@ mod tests {
     use libgo::game::player::Player;
     use libgo::game::vertex::Vertex;
 
-    fn black_checkered_game() -> Game {
-        let mut game = Game::new();
-        let size = game.board().size();
-        for y in 0..size {
-            for x in 0..size {
-                if (y % 2 == 0 && x % 2 == 0) || (y % 2 != 0 && x % 2 != 0) {
-                    let vertex = Vertex { x: x, y: y };
-                    let mov = Move {
-                        player: Player::Black,
-                        vertex: Some(vertex),
-                    };
-                    game.play(&mov).unwrap();
-                }
-            }
-        }
-        game
-    }
-
     fn black_checkered_matrix(size: usize) -> Matrix<State> {
         let mut matrix = Matrix::with_size(size);
         for y in 0..matrix.size() {
@@ -99,17 +81,5 @@ mod tests {
     fn bench_split_by_black_checkered_board(b: &mut Bencher) {
         let matrix: Matrix<State> = black_checkered_matrix(19);
         b.iter(|| matrix.get_regions(|vertex| vertex != &State::Black));
-    }
-
-    #[bench]
-    fn bench_small_black_enclosed_regions_empty_board(b: &mut Bencher) {
-        let game = Game::new();
-        b.iter(|| game.board().small_enclosed_regions(Player::Black));
-    }
-
-    #[bench]
-    fn bench_small_black_enclosed_regions_checkered_board(b: &mut Bencher) {
-        let game = black_checkered_game();
-        b.iter(|| game.board().small_enclosed_regions(Player::Black));
     }
 }

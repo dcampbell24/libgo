@@ -213,35 +213,6 @@ impl Board {
         self.matrix.size()
     }
 
-    /// Returns all small enclosed regions of the player.
-    ///
-    /// A small black enclosed region R is a region such that:
-    /// 1. R is surrounded by black stones.
-    /// 2. The interior contains only white stones.
-    /// 3. The border contains only white stones and empty intersections.
-    pub fn small_enclosed_regions(&self, player: Player) -> Vec<HashSet<Node>> {
-        let mut exterior_verts: Matrix<bool> = Matrix::with_size(self.size());
-        for chain in self.chains.iter() {
-            if chain.player == player {
-                for &node in chain.libs.iter().chain(chain.filled_libs.iter()) {
-                    exterior_verts[node] = true;
-                }
-            }
-        }
-        let regions = self.matrix.get_regions(|node| node != &State::from(player));
-        regions
-            .into_iter()
-            .filter(|region| {
-                for &node in region.iter() {
-                    if !exterior_verts[node] && self.matrix[node] == State::Empty {
-                        return false;
-                    }
-                }
-                true
-            })
-            .collect()
-    }
-
     /// The score according to ancient rules (count of black stones minus count of white stones).
     pub fn score_ancient(&self) -> i32 {
         self.matrix.values().fold(0, |acc, &state| {
