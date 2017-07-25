@@ -61,6 +61,33 @@ impl FromStr for Vertex {
     }
 }
 
+/// An iterator over a range of vertices.
+pub struct Iter {
+    order: usize,
+    next: Vertex,
+}
+
+impl Iterator for Iter {
+    type Item = Vertex;
+
+    fn next(&mut self) -> Option<Vertex> {
+        if self.next.y == self.order {
+            return None;
+        }
+
+        let current = self.next;
+
+        if self.next.x + 1 < self.order {
+            self.next.x += 1;
+        } else {
+            self.next.x = 0;
+            self.next.y += 1;
+        }
+
+        Some(current)
+    }
+}
+
 /// A collection of Vertices. This is a wrapper type for providing traits such as Display.
 #[derive(Debug)]
 pub struct Vertices(pub Vec<Vertex>);

@@ -4,8 +4,10 @@
 /// arrangement.
 pub mod board;
 
-/// A structure that holds the state all of the verticies of the board in a matrix.
+/// A simple square matrix data structure.
 pub mod matrix;
+/// A structure that wraps a matrix giving it topolocigal information.
+pub mod graph;
 /// Black or White.
 pub mod player;
 /// A structure for storing the x and y coordinates of a board cell.
@@ -241,8 +243,8 @@ impl Game {
         Ok(verts)
     }
 
-    /// Places the given set of verticies as handicaps on the board. Fails if any verticies are not
-    /// on the board, the board is not empty, less than two verticies are given, or so many are
+    /// Places the given set of vertices as handicaps on the board. Fails if any vertices are not
+    /// on the board, the board is not empty, less than two vertices are given, or so many are
     /// given that placing them would commit whole board suicide.
     pub fn set_free_handicap(&mut self, verts: HashSet<Vertex>) -> Result<(), String> {
         if verts.len() < 2 {
