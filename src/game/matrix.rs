@@ -141,7 +141,7 @@ impl<T: Clone + Debug + Default + Eq + Hash + PartialEq> Matrix<T> {
 
     /// Returns an iterator over all of the vertices in the matrix.
     pub fn vertices(&self) -> vertex::Iter {
-        vertex::Iter { order: self.order, next: Vertex { x: 0, y: 0 }}
+        vertex::Iter::new(self.order)
     }
 }
 

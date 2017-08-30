@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 use std::fmt;
 
 use game::player::Player;
@@ -14,10 +13,7 @@ const BOARD_LETTERS: &'static str = "ABCDEFGHJKLMNOPQRST";
 pub struct Board {
     /// A graph holding the state of each vertex on the board.
     graph: Graph<State>,
-    chains: Chains,
 }
-
-type Chains = Vec<Chain>;
 
 impl PartialEq for Board {
     fn eq(&self, other: &Board) -> bool {
@@ -121,7 +117,8 @@ impl Board {
 
     /// Returns true if there are no stones on the board.
     pub fn is_empty(&self) -> bool {
-        self.chains.is_empty()
+        self.graph.regions(State::Black).map_or(true, |blocks| blocks.is_empty()) &&
+        self.graph.regions(State::White).map_or(true, |blocks| blocks.is_empty())
     }
 
     /// Returns true if the vertex exists and is empty.
@@ -134,7 +131,7 @@ impl Board {
 
     /// Returns a list of all the empty vertices.
     pub fn empty_verts(&self) -> Vec<Vertex> {
-        self.graph.vertices().filter(|vertex| self.graph[vertex] == State::Empty).collect()
+        self.graph.vertices().filter(|&vertex| self.graph[vertex] == State::Empty).collect()
     }
 
     /// Removes all of the stones from the board.
@@ -153,10 +150,7 @@ impl Board {
                 size
             ))
         } else {
-            Ok(Board {
-                graph: Graph::with_matrix_order(size),
-                chains: Vec::new(),
-            })
+            Ok(Board { graph: Graph::with_matrix_order(size) })
         }
     }
 
@@ -170,22 +164,15 @@ impl Board {
         self.remove_captures(player.enemy());
     }
 
-    /// Removes all enemy Chains from the board that have 0 liberties.
-    fn remove_captures(&mut self, capturer: Player) {
-        for region in self.graph.regions(State::from(capturer.enemy())) {
-            // If it has no libs, remove it
-            let remove_region 
-            if !region.adjacencies.iter().any(|node| {
-                self.graph[node] == State::Empty
-            }) {
-
-            }
-        }
+    /// Removes all enemy Chains from the board that have 0 liberties. Returns true if any groups
+    /// were removed.
+    fn remove_captures(&mut self, capturer: Player) -> bool {
+        self.graph.shift_regions(State::from(capturer.enemy()), State::Empty)
     }
 
     fn push_letters(&self, board: &mut String) {
         board.push_str("  ");
-        for letter in BOARD_LETTERS.chars().take(self.matrix.size()) {
+        for letter in BOARD_LETTERS.chars().take(self.graph.grid_length()) {
             board.push(' ');
             board.push(letter);
         }
@@ -194,12 +181,12 @@ impl Board {
 
     /// Returns the current size of the board.
     pub fn size(&self) -> usize {
-        self.matrix.size()
+        self.graph.grid_length()
     }
 
     /// The score according to ancient rules (count of black stones minus count of white stones).
     pub fn score_ancient(&self) -> i32 {
-        self.matrix.values().fold(0, |acc, &state| {
+        self.graph.values().fold(0, |acc, &state| {
             match state {
                 State::Empty => acc,
                 State::Black => acc + 1,
@@ -220,7 +207,7 @@ impl Board {
             for x in 0..size {
                 board.push(' ');
                 let vertex = Vertex { x: x, y: y };
-                let c = match self.matrix[&vertex] {
+                let c = match self.graph[vertex] {
                     State::Empty => {
                         if star_points.contains(&vertex) {
                             '+'
@@ -242,7 +229,7 @@ impl Board {
 
 impl fmt::Debug for Board {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}\r\nChains = {:?}", self, self.chains)
+        write!(f, "{}", self)
     }
 }
 
@@ -284,27 +271,5 @@ impl From<Player> for State {
             Player::White => State::White,
             Player::Black => State::Black,
         }
-    }
-}
-
-/// A connected set of stones of the same color.
-#[derive(Clone, Debug)]
-struct Chain {
-    /// The state all of the vertices of the chain are in.
-    player: Player,
-    /// The set of vertices in the chain.
-    verts: HashSet<Node>,
-    /// The set of neighboring vertices that are empty.
-    libs: HashSet<Node>,
-    /// The set of neighboring vertices that are filled (by the opponent).
-    filled_libs: HashSet<Node>,
-}
-
-impl Chain {
-    /// Update a chain with the consumed union of another.
-    fn eat(&mut self, chain: Chain) {
-        self.verts.extend(chain.verts);
-        self.libs.extend(chain.libs);
-        self.filled_libs.extend(chain.filled_libs);
     }
 }

@@ -2,6 +2,7 @@ use std::collections::{HashMap, hash_set, HashSet};
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::ops::Index;
+use std::slice;
 
 use game::matrix::Matrix;
 use game::vertex::{self, Vertex};
@@ -18,9 +19,9 @@ impl<T: Clone + Debug + Default + Hash + Eq> PartialEq for Graph<T> {
     }
 }
 
-// A reference to a node in the graph.
+/// A reference to a node in the graph.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
-struct Node(usize);
+pub struct Node(usize);
 
 impl<T: Clone + Debug + Default + Hash + Eq + PartialEq> Graph<T> {
     /// Creates a new graph with all default values backed by a square matrix of order `order`.
@@ -39,20 +40,20 @@ impl<T: Clone + Debug + Default + Hash + Eq + PartialEq> Graph<T> {
     /// Sets the node in the graph to the new value.
     pub fn set(&mut self, vertex: Vertex, value: T) {
         let node = self.matrix.index_from_vertex(vertex).expect("invalid vertex");
-        let old_value = self.matrix[node];
+        let old_value = self.matrix[node].clone();
         if value == old_value {
             return;
         }
-        self.matrix[node] = value;
+        self.matrix[node] = value.clone();
 
         // Calculate the nodes that may have been part of a split or joined region.
-        let maybe_split = Vec::new();
-        let maybe_joined = Vec::new();
+        let mut maybe_split = Vec::new();
+        let mut maybe_joined = Vec::new();
         for node in self.matrix.adjacencies(node).into_iter() {
-            let adjacency = self.matrix[node];
-            if adjacency == old_value {
+            let ref adjacency = self.matrix[node];
+            if *adjacency == old_value {
                 maybe_split.push(node);
-            } else if adjacency == value {
+            } else if *adjacency == value {
                 maybe_joined.push(node);
             }
         }
@@ -62,24 +63,53 @@ impl<T: Clone + Debug + Default + Hash + Eq + PartialEq> Graph<T> {
         self.blocks.get_mut(&old_value).unwrap().retain(|region| !region.nodes.contains(&Node(node)));
         while !maybe_split.is_empty() {
             let node = Node(maybe_split.pop().unwrap());
-            let region = self.get_region(node, |&v| v == old_value);
+            let region = self.get_region(node, |v| *v == old_value);
             maybe_split.retain(|&n| !region.nodes.contains(&Node(n)));
             self.blocks.get_mut(&old_value).unwrap().push(region);
         }
 
         // Create a new region at the point of the updated node and remove any possibly joined
         // regions.
-        let region = self.get_region(Node(node), |&v| v == value);
+        let region = self.get_region(Node(node), |v| *v == value);
         if let Some(blocks) = self.blocks.get_mut(&value) {
             blocks.retain(|region| !maybe_split.iter().any(|&node| {
                 region.nodes.contains(&Node(node))
             }));
         }
-        self.blocks.entry(value).or_insert(vec![region]).push(region);
+        self.blocks.entry(value).or_insert(Vec::new()).push(region);
     }
 
-    /// Set all of the values in a region to `value` if predicate F is true.
-    // TODO pub set_region_to_if
+    /// Returns the underlying matrix order.
+    pub fn grid_length(&self) -> usize {
+        self.matrix.order()
+    }
+
+    /// Set all regions of value _from_ to _to_ where the region does not touch any regions with
+    /// value _to_. Returns true if any regions are shifted.
+    pub fn shift_regions(&mut self, from: T, to: T) -> bool {
+        let mut was_shifted = false;
+
+        if let Some(from_blocks) = self.blocks.remove(&from) {
+            let (shifted, not_shifted): (Vec<_>, Vec<_>) = from_blocks.into_iter().partition(|region| {
+                region.adjacencies.iter().all(|node| {
+                    self.matrix[node.0] != to
+                })
+            });
+
+            if !shifted.is_empty() {
+                was_shifted = true;
+            }
+
+            self.blocks.insert(from, not_shifted);
+            if let Some(mut blocks) = self.blocks.remove(&to) {
+                blocks.extend(shifted);
+                self.blocks.insert(to, blocks);
+            } else {
+                self.blocks.insert(to, shifted);
+            }
+        }
+        was_shifted
+    }
 
     /// Returns the largest connected region of nodes for which the test function applied to
     /// each node returns true starting at `node`.
@@ -152,7 +182,7 @@ impl<T: Clone + Debug + Default + Hash + Eq + PartialEq> Graph<T> {
             for n in &region.nodes {
                 visited[n.0] = true;
             }
-            regions.insert(self.matrix[i], region);
+            regions.insert(self.matrix[i].clone(), region);
         }
         regions
     }
@@ -169,9 +199,14 @@ impl<T: Clone + Debug + Default + Hash + Eq + PartialEq> Graph<T> {
         self.matrix.vertices()
     }
 
+    /// Returns an iterator over the values in the graph.
+    pub fn values(&self) -> slice::Iter<T> {
+        self.matrix.values()
+    }
+
     /// Returns all regions with value `value`.
-    pub fn regions(&self, value: T) -> &Vec<Region> {
-        self.blocks.get(&value).unwrap_or(&Vec::new())
+    pub fn regions(&self, value: T) -> Option<&Vec<Region>> {
+        self.blocks.get(&value)
     }
 }
 

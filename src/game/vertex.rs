@@ -67,6 +67,12 @@ pub struct Iter {
     next: Vertex,
 }
 
+impl Iter {
+    pub fn new(order: usize) -> Self {
+        Iter { order: order, next: Vertex { x: 0, y: 0 }}
+    }
+}
+
 impl Iterator for Iter {
     type Item = Vertex;
 
