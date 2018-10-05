@@ -62,12 +62,14 @@ impl FromStr for Vertex {
 }
 
 /// An iterator over a range of vertices.
+#[derive(Clone, Copy, Debug)]
 pub struct Iter {
     order: usize,
     next: Vertex,
 }
 
 impl Iter {
+    /// Returns a new Iterator starting at (0, 0), the bottom left corner.
     pub fn new(order: usize) -> Self {
         Iter { order: order, next: Vertex { x: 0, y: 0 }}
     }

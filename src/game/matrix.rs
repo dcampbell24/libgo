@@ -1,6 +1,5 @@
 //! A generic Matrix module specilized for holding Go Board state.
 
-use std::collections::{HashMap, hash_set, HashSet};
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::ops::{Index, IndexMut};

@@ -7,6 +7,8 @@ use std::slice;
 use game::matrix::Matrix;
 use game::vertex::{self, Vertex};
 
+/// A generic structure that contains a square matrix and tracks all of the regions of cells that
+/// are adjacent and contain the same value.
 #[derive(Clone, Debug)]
 pub struct Graph<T: Clone + Debug + Default + Hash + Eq + PartialEq> {
     matrix: Matrix<T>,
@@ -20,7 +22,7 @@ impl<T: Clone + Debug + Default + Hash + Eq> PartialEq for Graph<T> {
 }
 
 /// A reference to a node in the graph.
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct Node(usize);
 
 impl<T: Clone + Debug + Default + Hash + Eq + PartialEq> Graph<T> {
@@ -167,6 +169,7 @@ impl<T: Clone + Debug + Default + Hash + Eq + PartialEq> Graph<T> {
         regions
     }
 
+    // FIXME: Can't there be more than one region with the same value?
     /// Returns all of the largest connected regions of vertices that are equal to each other.
     pub fn get_regions_by_value(&self) -> HashMap<T, Region> {
         let matrix_length = self.matrix.order() * self.matrix.order();
@@ -241,53 +244,64 @@ impl Region {
 mod tests {
     use super::*;
 
+    /*
     static TEST_MATRIX_2: [u32; 4] = [
         0, 0,
         1, 1,
-    ];
+    */
 
+    /*
     static TEST_MATRIX_3: [u32; 9] = [
         0, 0, 1,
         1, 1, 0,
         0, 0, 0,
     ];
+    */
 
     #[test]
     fn get_region() {
-        let matrix = Matrix::from(TEST_MATRIX_3.to_vec());
+        let mut graph = Graph::with_matrix_order(3);
+        graph.set(Vertex {x: 2, y: 2}, 1);
+        graph.set(Vertex {x: 1, y: 1}, 1);
+        graph.set(Vertex {x: 0, y: 1}, 1);
 
-        let region = matrix.get_region(Node(4), |&value| value == 1);
+        let region = graph.get_region(Node(4), |&value| value == 1);
         assert_eq!(region.nodes, vec![Node(3), Node(4)].into_iter().collect());
         assert_eq!(region.adjacencies, vec![Node(0), Node(1), Node(5), Node(6), Node(7)].into_iter().collect());
 
-        let region = matrix.get_region(Node(2), |&value| value == 1);
-        assert_eq!(region.nodes, vec![Node(2)].into_iter().collect());
-        assert_eq!(region.adjacencies, vec![Node(1), Node(5)].into_iter().collect());
+        let region = graph.get_region(Node(8), |&value| value == 1);
+        assert_eq!(region.nodes, vec![Node(8)].into_iter().collect());
+        assert_eq!(region.adjacencies, vec![Node(5), Node(7)].into_iter().collect());
 
-
-        let region = matrix.get_region(Node(8), |&value| value == 1);
+        let region = graph.get_region(Node(2), |&value| value == 1);
         assert_eq!(region.nodes, HashSet::new());
         assert_eq!(region.adjacencies, HashSet::new());
     }
 
     #[test]
     fn get_regions() {
-        let matrix = Matrix::from(TEST_MATRIX_3.to_vec());
+        let mut graph = Graph::with_matrix_order(3);
+        graph.set(Vertex {x: 2, y: 2}, 1);
+        graph.set(Vertex {x: 1, y: 1}, 1);
+        graph.set(Vertex {x: 0, y: 1}, 1);
 
-        let regions = matrix.get_regions(|&value| value == 1);
+        let regions = graph.get_regions(|&value| value == 1);
         assert_eq!(regions.len(), 2);
-        assert_eq!(regions[0].nodes, vec![Node(2)].into_iter().collect());
-        assert_eq!(regions[1].nodes, vec![Node(3), Node(4)].into_iter().collect());
+        assert_eq!(regions[0].nodes, vec![Node(3), Node(4)].into_iter().collect());
+        assert_eq!(regions[1].nodes, vec![Node(8)].into_iter().collect());
     }
 
     #[test]
     fn partition_by_value() {
-        let matrix = Matrix::from(TEST_MATRIX_2.to_vec());
-        let regions = matrix.get_regions_by_value();
+        let mut graph = Graph::with_matrix_order(2);
+        graph.set(Vertex {x: 0, y: 0}, 1);
+        graph.set(Vertex {x: 1, y: 0}, 1);
+
+        let regions = graph.get_regions_by_value();
         assert_eq!(regions.len(), 2);
-        assert_eq!(regions[0].nodes, vec![Node(0), Node(1)].into_iter().collect());
-        assert_eq!(regions[1].nodes, vec![Node(2), Node(3)].into_iter().collect());
-        assert_eq!(regions[0].adjacencies, vec![Node(2), Node(3)].into_iter().collect());
-        assert_eq!(regions[1].adjacencies, vec![Node(0), Node(1)].into_iter().collect());
+        assert_eq!(regions[&0].nodes, vec![Node(2), Node(3)].into_iter().collect());
+        assert_eq!(regions[&0].adjacencies, vec![Node(0), Node(1)].into_iter().collect());
+        assert_eq!(regions[&1].nodes, vec![Node(0), Node(1)].into_iter().collect());
+        assert_eq!(regions[&1].adjacencies, vec![Node(2), Node(3)].into_iter().collect());
     }
 }
