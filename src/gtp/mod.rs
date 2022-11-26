@@ -1,7 +1,4 @@
-//! This module implements the [Go Text Protocol][1] with [KGS][2] support.
-//
-//! [1]: http://www.lysator.liu.se/~gunnar/gtp/
-//! [2]: http://www.gokgs.com
+//! This module implements the [Go Text Protocol](http://www.lysator.liu.se/~gunnar/gtp/) with [KGS](http://www.gokgs.com) support.
 
 /// A Go Text Protocol Command.
 pub mod command;

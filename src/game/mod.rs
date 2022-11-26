@@ -296,7 +296,6 @@ impl Game {
 /// One of major Go variations.
 #[derive(Clone, Copy, Debug)]
 pub enum RuleSet {
-    /// [Chinese ruleset][1]
-    /// [1]: http://senseis.xmp.net/?ChineseRules
+    /// [Chinese ruleset](http://senseis.xmp.net/?ChineseRules)
     Chinese,
 }
