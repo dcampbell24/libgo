@@ -123,22 +123,20 @@ impl Game {
     /// This may be extened to surreal numbers and combintorial game values to give a more precise
     /// description of the state of the game.
     pub fn value(&self) -> i32 {
-        self.all_legal_moves(Player::Black).len() as i32 -
-            self.all_legal_moves(Player::White).len() as i32
+        self.all_legal_moves(Player::Black).len() as i32
+            - self.all_legal_moves(Player::White).len() as i32
     }
 
     /// Returns a new game with the given board size if the board size is supported, else None.
     pub fn with_board_size(board_size: usize) -> Result<Self, String> {
-        Board::with_size(board_size).map(|board| {
-            Game {
-                board,
-                previous_boards: Vec::new(),
-                move_history: Vec::new(),
-                komi: CHINESE_KOMI,
-                _time_settings: Clock::Unlimited,
-                kgs_game_over: false,
-                rule_set: RuleSet::Chinese,
-            }
+        Board::with_size(board_size).map(|board| Game {
+            board,
+            previous_boards: Vec::new(),
+            move_history: Vec::new(),
+            komi: CHINESE_KOMI,
+            _time_settings: Clock::Unlimited,
+            kgs_game_over: false,
+            rule_set: RuleSet::Chinese,
         })
     }
 
@@ -288,9 +286,10 @@ impl Game {
     pub fn is_over(&self) -> bool {
         let move_count = self.move_history.len();
 
-        move_count > MAX_MOVES ||
-            move_count > 1 && self.move_history[move_count - 1].vertex.is_none() &&
-                self.move_history[move_count - 2].vertex.is_none()
+        move_count > MAX_MOVES
+            || move_count > 1
+                && self.move_history[move_count - 1].vertex.is_none()
+                && self.move_history[move_count - 2].vertex.is_none()
     }
 }
 

@@ -1,17 +1,16 @@
 #![feature(test)]
 
-extern crate test;
 extern crate libgo;
-
+extern crate test;
 
 #[cfg(test)]
 mod tests {
-    use test::Bencher;
-    use libgo::game::Game;
     use libgo::game::board::{Board, Move, State};
     use libgo::game::matrix::Matrix;
     use libgo::game::player::Player;
     use libgo::game::vertex::Vertex;
+    use libgo::game::Game;
+    use test::Bencher;
 
     fn black_checkered_matrix(size: usize) -> Matrix<State> {
         let mut matrix = Matrix::with_size(size);

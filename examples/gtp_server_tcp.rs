@@ -117,7 +117,9 @@ fn start(address: &str, setup_commands: Vec<String>) {
                         white_connection: stream,
                     };
                     let setup_commands = setup_commands.clone();
-                    thread::spawn(move || { game.start(setup_commands); });
+                    thread::spawn(move || {
+                        game.start(setup_commands);
+                    });
                 }
             }
             Err(_e) => { /* connection failed */ }

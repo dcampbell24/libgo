@@ -2,10 +2,10 @@ use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::str::FromStr;
 
-use game::{Game, Handicap};
 use game::board::Move;
 use game::player::Player;
 use game::vertex::{Vertex, Vertices};
+use game::{Game, Handicap};
 use gtp::command::Command;
 use gtp::response::{CommandResult, Response};
 
@@ -24,15 +24,13 @@ fn gtp_boardsize(args: &Vec<String>, game: &mut Game) -> CommandResult {
     }
 
     match args[0].parse::<u32>() {
-        Ok(size) => {
-            match Game::with_board_size(size as usize) {
-                Ok(new_game) => {
-                    *game = new_game;
-                    Ok(None)
-                }
-                Err(_) => Err("unacceptable size".to_owned()),
+        Ok(size) => match Game::with_board_size(size as usize) {
+            Ok(new_game) => {
+                *game = new_game;
+                Ok(None)
             }
-        }
+            Err(_) => Err("unacceptable size".to_owned()),
+        },
         Err(_) => Err("boardsize not a u32".to_owned()),
     }
 }
@@ -51,7 +49,6 @@ fn gtp_genmove(args: &Vec<String>, game: &mut Game) -> CommandResult {
 }
 
 fn gtp_place_handicap(args: &Vec<String>, game: &mut Game, handicap: Handicap) -> CommandResult {
-
     if args.is_empty() {
         return Err("syntax error".to_owned());
     }
@@ -73,10 +70,12 @@ fn gtp_play(args: &Vec<String>, game: &mut Game) -> CommandResult {
     let color = parse_color(&args[0])?;
     let vertex = args[1].to_uppercase();
     if &vertex == "PASS" {
-        return game.play(&Move {
-            player: color,
-            vertex: None,
-        }).map(|_ok| None);
+        return game
+            .play(&Move {
+                player: color,
+                vertex: None,
+            })
+            .map(|_ok| None);
     }
 
     let vertex = Vertex::from_str(&vertex)?;
@@ -128,12 +127,12 @@ impl Engine {
         let result = match command.name.as_ref() {
             "list_commands" => Ok(Some(self.to_string())),
             "known_command" => Ok(Some(self.contains(command).to_string())),
-            _ => {
-                self.inner.get(&command.name).map_or(
-                    Err("unknown command".to_owned()),
-                    |f| f(&command.args, game),
-                )
-            }
+            _ => self
+                .inner
+                .get(&command.name)
+                .map_or(Err("unknown command".to_owned()), |f| {
+                    f(&command.args, game)
+                }),
         };
         Response {
             id: command.id,
@@ -146,7 +145,6 @@ impl Engine {
     where
         F: 'static + Fn(&Vec<String>, &mut Game) -> CommandResult,
     {
-
         self.inner.insert(name.to_owned(), Box::new(f));
     }
 
@@ -169,13 +167,13 @@ impl Engine {
             if args.is_empty() {
                 return Err("expected komi value".to_owned());
             }
-            args[0].parse::<f64>().ok().map_or(
-                Err("komi is not a float".to_owned()),
-                |komi| {
+            args[0]
+                .parse::<f64>()
+                .ok()
+                .map_or(Err("komi is not a float".to_owned()), |komi| {
                     game.komi = komi;
                     Ok(None)
-                },
-            )
+                })
         });
         commands.insert("list_commands", |_args, _game| {
             unreachable!();
@@ -256,13 +254,12 @@ impl Engine {
             gtp_place_handicap(args, game, Handicap::Free)
         });
         self.insert("set_free_handicap", |args, game| {
-            let verts: HashSet<_> = args.iter()
+            let verts: HashSet<_> = args
+                .iter()
                 .filter_map(|s| Vertex::from_str(&s.to_uppercase()).ok())
                 .collect();
             if verts.len() != args.len() {
-                return Err(
-                    "syntax error, repeated vertex, or pass given as argument".to_owned(),
-                );
+                return Err("syntax error, repeated vertex, or pass given as argument".to_owned());
             }
 
             game.set_free_handicap(verts).map(|_ok| None)

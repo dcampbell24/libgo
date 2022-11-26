@@ -8,8 +8,8 @@ use std::io::BufReader;
 use std::net::TcpStream;
 
 use libgo::game::Game;
-use libgo::gtp::engine::Engine;
 use libgo::gtp::command::Command;
+use libgo::gtp::engine::Engine;
 
 pub fn main() {
     let mut gtp = Engine::new();

@@ -84,10 +84,12 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
         self.vec
             .iter()
             .enumerate()
-            .filter_map(|(index, state)| if *state == in_state {
-                Some(vertex_from_index(index, self.size))
-            } else {
-                None
+            .filter_map(|(index, state)| {
+                if *state == in_state {
+                    Some(vertex_from_index(index, self.size))
+                } else {
+                    None
+                }
             })
             .collect()
     }
@@ -159,7 +161,10 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
             adjacencies.clear();
         }
 
-        Region { nodes: passed_test, adjacencies }
+        Region {
+            nodes: passed_test,
+            adjacencies,
+        }
     }
 
     /// Returns all of the largest connected regions of verticies for which the test function
@@ -248,14 +253,12 @@ impl<T: Clone + Debug + Default + PartialEq> IndexMut<Node> for Matrix<T> {
     }
 }
 
-
 impl<T: Clone + Debug + Default + PartialEq> From<Vec<T>> for Matrix<T> {
     fn from(vec: Vec<T>) -> Self {
         let size = (vec.len() as f64).sqrt() as usize;
         Matrix { size, vec }
     }
 }
-
 
 /// A set of connected nodes in the matrix and their adjacencies.
 #[derive(Debug, PartialEq, Eq)]
@@ -275,16 +278,9 @@ impl Region {
 mod tests {
     use super::*;
 
-    static TEST_MATRIX_2: [u32; 4] = [
-        0, 0,
-        1, 1,
-    ];
+    static TEST_MATRIX_2: [u32; 4] = [0, 0, 1, 1];
 
-    static TEST_MATRIX_3: [u32; 9] = [
-        0, 0, 1,
-        1, 1, 0,
-        0, 0, 0,
-    ];
+    static TEST_MATRIX_3: [u32; 9] = [0, 0, 1, 1, 1, 0, 0, 0, 0];
 
     #[test]
     fn get_region() {
@@ -292,12 +288,19 @@ mod tests {
 
         let region = matrix.get_region(Node(4), |&value| value == 1);
         assert_eq!(region.nodes, vec![Node(3), Node(4)].into_iter().collect());
-        assert_eq!(region.adjacencies, vec![Node(0), Node(1), Node(5), Node(6), Node(7)].into_iter().collect());
+        assert_eq!(
+            region.adjacencies,
+            vec![Node(0), Node(1), Node(5), Node(6), Node(7)]
+                .into_iter()
+                .collect()
+        );
 
         let region = matrix.get_region(Node(2), |&value| value == 1);
         assert_eq!(region.nodes, vec![Node(2)].into_iter().collect());
-        assert_eq!(region.adjacencies, vec![Node(1), Node(5)].into_iter().collect());
-
+        assert_eq!(
+            region.adjacencies,
+            vec![Node(1), Node(5)].into_iter().collect()
+        );
 
         let region = matrix.get_region(Node(8), |&value| value == 1);
         assert_eq!(region.nodes, HashSet::new());
@@ -311,7 +314,10 @@ mod tests {
         let regions = matrix.get_regions(|&value| value == 1);
         assert_eq!(regions.len(), 2);
         assert_eq!(regions[0].nodes, vec![Node(2)].into_iter().collect());
-        assert_eq!(regions[1].nodes, vec![Node(3), Node(4)].into_iter().collect());
+        assert_eq!(
+            regions[1].nodes,
+            vec![Node(3), Node(4)].into_iter().collect()
+        );
     }
 
     #[test]
@@ -319,9 +325,21 @@ mod tests {
         let matrix = Matrix::from(TEST_MATRIX_2.to_vec());
         let regions = matrix.get_regions_by_value();
         assert_eq!(regions.len(), 2);
-        assert_eq!(regions[0].nodes, vec![Node(0), Node(1)].into_iter().collect());
-        assert_eq!(regions[1].nodes, vec![Node(2), Node(3)].into_iter().collect());
-        assert_eq!(regions[0].adjacencies, vec![Node(2), Node(3)].into_iter().collect());
-        assert_eq!(regions[1].adjacencies, vec![Node(0), Node(1)].into_iter().collect());
+        assert_eq!(
+            regions[0].nodes,
+            vec![Node(0), Node(1)].into_iter().collect()
+        );
+        assert_eq!(
+            regions[1].nodes,
+            vec![Node(2), Node(3)].into_iter().collect()
+        );
+        assert_eq!(
+            regions[0].adjacencies,
+            vec![Node(2), Node(3)].into_iter().collect()
+        );
+        assert_eq!(
+            regions[1].adjacencies,
+            vec![Node(0), Node(1)].into_iter().collect()
+        );
     }
 }

@@ -1,9 +1,9 @@
 use std::collections::HashSet;
 use std::fmt;
 
+use game::matrix::{Matrix, Node};
 use game::player::Player;
 use game::vertex::Vertex;
-use game::matrix::{Matrix, Node};
 
 const BOARD_MAX_SIZE: usize = 19;
 const BOARD_MIN_SIZE: usize = 1;
@@ -109,7 +109,9 @@ impl Board {
         let mut handicaps = self.star_points();
         if board_size > 7 && (stones == 5 || stones == 7 || stones >= 9) {
             handicaps.truncate(stones - 1);
-            if let Some(center) = self.center_point() { handicaps.push(center) }
+            if let Some(center) = self.center_point() {
+                handicaps.push(center)
+            }
         } else {
             handicaps.truncate(stones);
         }
@@ -157,9 +159,7 @@ impl Board {
         if !(BOARD_MIN_SIZE..=BOARD_MAX_SIZE).contains(&size) {
             Err(format!(
                 "Board size must be between {} and {}, but is {}.",
-                BOARD_MIN_SIZE,
-                BOARD_MAX_SIZE,
-                size
+                BOARD_MIN_SIZE, BOARD_MAX_SIZE, size
             ))
         } else {
             Ok(Board {
@@ -171,7 +171,10 @@ impl Board {
 
     /// Updates the board with a move. The move is assumed to be valid and legal.
     pub fn place_stone(&mut self, player: Player, vertex: Vertex) {
-        let node = self.matrix.node_from_vertex(vertex).expect("invlaid vertex");
+        let node = self
+            .matrix
+            .node_from_vertex(vertex)
+            .expect("invlaid vertex");
         self.matrix[node] = State::from(player);
 
         // Remove the liberty from chains on the board.
@@ -212,12 +215,10 @@ impl Board {
 
     /// The score according to ancient rules (count of black stones minus count of white stones).
     pub fn score_ancient(&self) -> i32 {
-        self.matrix.values().fold(0, |acc, &state| {
-            match state {
-                State::Empty => acc,
-                State::Black => acc + 1,
-                State::White => acc - 1,
-            }
+        self.matrix.values().fold(0, |acc, &state| match state {
+            State::Empty => acc,
+            State::Black => acc + 1,
+            State::White => acc - 1,
         })
     }
 
