@@ -50,11 +50,17 @@ pub struct Game {
     move_history: Vec<Move>,
     /// The score handicap.
     pub komi: f64,
-    time_settings: Clock,
+    _time_settings: Clock,
     /// Has KGS told us a game just ended?
     pub kgs_game_over: bool,
     /// The variation of Go being played.
     pub rule_set: RuleSet,
+}
+
+impl Default for Game {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Game {
@@ -129,7 +135,7 @@ impl Game {
                 previous_boards: Vec::new(),
                 move_history: Vec::new(),
                 komi: CHINESE_KOMI,
-                time_settings: Clock::Unlimited,
+                _time_settings: Clock::Unlimited,
                 kgs_game_over: false,
                 rule_set: RuleSet::Chinese,
             }

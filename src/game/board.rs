@@ -109,10 +109,7 @@ impl Board {
         let mut handicaps = self.star_points();
         if board_size > 7 && (stones == 5 || stones == 7 || stones >= 9) {
             handicaps.truncate(stones - 1);
-            match self.center_point() {
-                Some(center) => handicaps.push(center),
-                None => (),
-            }
+            if let Some(center) = self.center_point() { handicaps.push(center) }
         } else {
             handicaps.truncate(stones);
         }

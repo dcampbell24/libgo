@@ -49,7 +49,7 @@ impl FromStr for Vertex {
         };
 
         let number: String = vertex.chars().skip(1).collect();
-        let y = match u32::from_str_radix(&number, 10) {
+        let y = match number.parse::<u32>() {
             Ok(y) => y as usize,
             Err(_) => return Err("number is not a u32".to_owned()),
         };

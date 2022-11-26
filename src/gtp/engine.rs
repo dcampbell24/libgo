@@ -23,7 +23,7 @@ fn gtp_boardsize(args: &Vec<String>, game: &mut Game) -> CommandResult {
         return Err("boardsize not given".to_owned());
     }
 
-    match u32::from_str_radix(&args[0], 10) {
+    match args[0].parse::<u32>() {
         Ok(size) => {
             match Game::with_board_size(size as usize) {
                 Ok(new_game) => {
@@ -41,7 +41,7 @@ fn gtp_genmove(args: &Vec<String>, game: &mut Game) -> CommandResult {
     if args.is_empty() {
         return Err("too few arguments, expected: genmove <color>".to_owned());
     }
-    let player = try!(parse_color(&args[0]));
+    let player = parse_color(&args[0])?;
     let move_ = game.genmove_random(player);
     let move_str = match move_.vertex {
         Some(vertex) => vertex.to_string(),
@@ -55,7 +55,7 @@ fn gtp_place_handicap(args: &Vec<String>, game: &mut Game, handicap: Handicap) -
     if args.is_empty() {
         return Err("syntax error".to_owned());
     }
-    let stones = match u32::from_str_radix(&args[0], 10) {
+    let stones = match args[0].parse::<u32>() {
         Ok(stones) => stones as usize,
         Err(_) => {
             return Err("number is not a u32".to_owned());
@@ -70,7 +70,7 @@ fn gtp_play(args: &Vec<String>, game: &mut Game) -> CommandResult {
         return Err("too few arguments, expected: <color> <vertex>".to_owned());
     }
 
-    let color = try!(parse_color(&args[0]));
+    let color = parse_color(&args[0])?;
     let vertex = args[1].to_uppercase();
     if &vertex == "PASS" {
         return game.play(&Move {
@@ -79,7 +79,7 @@ fn gtp_play(args: &Vec<String>, game: &mut Game) -> CommandResult {
         }).map(|_ok| None);
     }
 
-    let vertex = try!(Vertex::from_str(&vertex));
+    let vertex = Vertex::from_str(&vertex)?;
     if vertex.x >= game.board().size() || vertex.y >= game.board().size() {
         return Err("illegal move".to_owned());
     }
@@ -99,9 +99,18 @@ fn parse_color(color: &str) -> Result<Player, String> {
     }
 }
 
+type Arguments = Vec<String>;
+type CommandInputOutput = Box<dyn Fn(&Arguments, &mut Game) -> CommandResult>;
+
 /// A structure holding a map of commands to their fns.
 pub struct Engine {
-    inner: HashMap<String, Box<dyn Fn(&Vec<String>, &mut Game) -> CommandResult>>,
+    inner: HashMap<String, CommandInputOutput>,
+}
+
+impl Default for Engine {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Engine {

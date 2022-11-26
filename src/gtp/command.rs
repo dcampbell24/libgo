@@ -101,7 +101,7 @@ impl Command {
 
         preprocess_line(line).map(|line| {
             let mut words = line.split_whitespace().peekable();
-            if let Some(Ok(command_id)) = words.peek().map(|word| u32::from_str_radix(word, 10)) {
+            if let Some(Ok(command_id)) = words.peek().map(|word| word.parse::<u32>()) {
                 words.next();
                 id = Some(command_id);
             }
