@@ -18,7 +18,7 @@ mod tests {
         for y in 0..matrix.size() {
             for x in 0..matrix.size() {
                 if (y % 2 == 0 && x % 2 == 0) || (y % 2 != 0 && x % 2 != 0) {
-                    matrix[&Vertex { x: x, y: y }] = State::Black;
+                    matrix[&Vertex { x, y }] = State::Black;
                 }
             }
         }
