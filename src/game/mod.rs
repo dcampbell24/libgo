@@ -82,7 +82,7 @@ impl Game {
         let mut rng = rand::thread_rng();
 
         while !possible_moves.is_empty() {
-            let index = rng.gen_range(0, possible_moves.len());
+            let index = rng.gen_range(0..possible_moves.len());
             let mov = Move {
                 player,
                 vertex: Some(possible_moves[index]),

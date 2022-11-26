@@ -11,7 +11,7 @@ categories = ["games"]
 license = "MIT"
 
 [dependencies]
-rand = "0.3"
+rand = "0.8"
 
 [dev-dependencies]
 clap = "2.19"
