@@ -1,7 +1,7 @@
 use std::fmt;
 use std::str::FromStr;
 
-const GOBAN_LETTERS: &'static str = "ABCDEFGHJKLMNOPQRST";
+const GOBAN_LETTERS: &str = "ABCDEFGHJKLMNOPQRST";
 
 /// A structure for storing the x and y coordinates of a board cell.
 ///
@@ -57,7 +57,7 @@ impl FromStr for Vertex {
         if y == 0 {
             return Err("number must be greater than zero".to_owned());
         }
-        Ok(Vertex { x: x, y: y - 1 })
+        Ok(Vertex { x, y: y - 1 })
     }
 }
 

@@ -10,16 +10,16 @@ use gtp::command::Command;
 use gtp::response::{CommandResult, Response};
 
 /// The library version.
-pub const AGENT_VERSION: &'static str = env!("CARGO_PKG_VERSION");
+pub const AGENT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// The Go Text Protocol (GTP) version.
-const GTP_PROTOCOL_VERSION: &'static str = "2";
+const GTP_PROTOCOL_VERSION: &str = "2";
 
 /// The official name of the agent.
-const PROGRAM_NAME: &'static str = env!("CARGO_PKG_NAME");
+const PROGRAM_NAME: &str = env!("CARGO_PKG_NAME");
 
 fn gtp_boardsize(args: &Vec<String>, game: &mut Game) -> CommandResult {
-    if args.len() < 1 {
+    if args.is_empty() {
         return Err("boardsize not given".to_owned());
     }
 
@@ -88,7 +88,7 @@ fn gtp_play(args: &Vec<String>, game: &mut Game) -> CommandResult {
         player: color,
         vertex: Some(vertex),
     };
-    return game.play(&mov).map(|_ok| None);
+    game.play(&mov).map(|_ok| None)
 }
 
 fn parse_color(color: &str) -> Result<Player, String> {
@@ -101,7 +101,7 @@ fn parse_color(color: &str) -> Result<Player, String> {
 
 /// A structure holding a map of commands to their fns.
 pub struct Engine {
-    inner: HashMap<String, Box<Fn(&Vec<String>, &mut Game) -> CommandResult>>,
+    inner: HashMap<String, Box<dyn Fn(&Vec<String>, &mut Game) -> CommandResult>>,
 }
 
 impl Engine {
@@ -115,14 +115,14 @@ impl Engine {
     }
 
     /// Runs the given command with the given game and returns the result.
-    pub fn exec(&self, mut game: &mut Game, command: &Command) -> Response {
+    pub fn exec(&self, game: &mut Game, command: &Command) -> Response {
         let result = match command.name.as_ref() {
             "list_commands" => Ok(Some(self.to_string())),
             "known_command" => Ok(Some(self.contains(command).to_string())),
             _ => {
                 self.inner.get(&command.name).map_or(
                     Err("unknown command".to_owned()),
-                    |f| f(&command.args, &mut game),
+                    |f| f(&command.args, game),
                 )
             }
         };
@@ -147,12 +147,12 @@ impl Engine {
             inner: HashMap::new(),
         };
 
-        commands.insert("boardsize", |args, game| gtp_boardsize(args, game));
+        commands.insert("boardsize", gtp_boardsize);
         commands.insert("clear_board", |_args, game| {
             game.clear_board();
             Ok(None)
         });
-        commands.insert("genmove", |args, game| gtp_genmove(&args, game));
+        commands.insert("genmove", gtp_genmove);
         commands.insert("known_command", |_args, _game| {
             unreachable!();
         });
@@ -173,7 +173,7 @@ impl Engine {
         });
         commands.insert("name", |_args, _game| Ok(Some(PROGRAM_NAME.to_owned())));
         commands.insert("play", |args: &Vec<String>, game: &mut Game| {
-            gtp_play(&args, game)
+            gtp_play(args, game)
         });
         commands.insert("protocol_version", |_args, _game| {
             Ok(Some(GTP_PROTOCOL_VERSION.to_owned()))
@@ -226,7 +226,7 @@ impl Engine {
             game.kgs_game_over = true;
             Ok(None)
         });
-        self.insert("kgs-genmove_cleanup", |args, game| gtp_genmove(&args, game));
+        self.insert("kgs-genmove_cleanup", gtp_genmove);
         // kgs-rules
         // kgs-time_settings
     }

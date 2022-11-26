@@ -1,6 +1,6 @@
 use std::fmt;
 
-const EOL: &'static str = "\r\n";
+const EOL: &str = "\r\n";
 
 /// The GTP result of issuing a command to a driver.
 pub type CommandResult = Result<Option<String>, String>;

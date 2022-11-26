@@ -23,7 +23,7 @@ impl<C: Commands> Iterator for CommandsIter<C> {
     type Item = io::Result<Command>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        while let Some(result_line) = self.lines.next() {
+        for result_line in self.lines.by_ref() {
             match result_line {
                 Ok(line) => {
                     if let Some(command) = Command::from_line(&line) {
@@ -83,7 +83,7 @@ fn preprocess_line(line: &str) -> Option<String> {
 }
 
 /// A GTP command.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Command {
     /// A sequence id.
     pub id: Option<u32>,

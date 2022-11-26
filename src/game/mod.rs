@@ -78,7 +78,7 @@ impl Game {
         while !possible_moves.is_empty() {
             let index = rng.gen_range(0, possible_moves.len());
             let mov = Move {
-                player: player,
+                player,
                 vertex: Some(possible_moves[index]),
             };
             match self.play(&mov) {
@@ -104,7 +104,7 @@ impl Game {
         let mut legal_moves = Vec::new();
         for vertex in self.board.empty_verts() {
             if self.is_legal_move(&Move {
-                player: player,
+                player,
                 vertex: Some(vertex),
             }) {
                 legal_moves.push(vertex);
@@ -182,7 +182,7 @@ impl Game {
             self.board.place_stone(mov.player, vertex);
         }
 
-        self.move_history.push(mov.clone());
+        self.move_history.push(*mov);
         Ok(())
     }
 
@@ -271,12 +271,10 @@ impl Game {
         let len = self.move_history.len();
         if len > 0 {
             self.move_history[len - 1].player.enemy()
+        } else if self.board.is_empty() {
+            Player::Black
         } else {
-            if self.board.is_empty() {
-                Player::Black
-            } else {
-                Player::White
-            }
+            Player::White
         }
     }
 

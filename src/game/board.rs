@@ -7,7 +7,7 @@ use game::matrix::{Matrix, Node};
 
 const BOARD_MAX_SIZE: usize = 19;
 const BOARD_MIN_SIZE: usize = 1;
-const BOARD_LETTERS: &'static str = "ABCDEFGHJKLMNOPQRST";
+const BOARD_LETTERS: &str = "ABCDEFGHJKLMNOPQRST";
 
 /// A representation of the board state.
 #[derive(Clone)]
@@ -157,7 +157,7 @@ impl Board {
     /// Creates a new board with the given size. A full size game is 19, but 13 and 9 are also
     /// common. Returns None if the board size is not supported.
     pub fn with_size(size: usize) -> Result<Self, String> {
-        if size < BOARD_MIN_SIZE || size > BOARD_MAX_SIZE {
+        if !(BOARD_MIN_SIZE..=BOARD_MAX_SIZE).contains(&size) {
             Err(format!(
                 "Board size must be between {} and {}, but is {}.",
                 BOARD_MIN_SIZE,
@@ -235,7 +235,7 @@ impl Board {
             board.push_str(&format!("{:02}", y + 1));
             for x in 0..size {
                 board.push(' ');
-                let vertex = Vertex { x: x, y: y };
+                let vertex = Vertex { x, y };
                 let c = match self.matrix[&vertex] {
                     State::Empty => {
                         if star_points.contains(&vertex) {
@@ -277,10 +277,10 @@ impl Board {
         }
 
         let mut chain = Chain {
-            player: player,
-            verts: verts,
-            libs: libs,
-            filled_libs: filled_libs,
+            player,
+            verts,
+            libs,
+            filled_libs,
         };
 
         for node in adjacent_chains.into_iter() {

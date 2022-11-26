@@ -8,7 +8,7 @@ use std::slice;
 use game::vertex::Vertex;
 
 /// A matrix holding the state of type T for each vertex on the board.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Matrix<T: Clone + Debug + Default + PartialEq> {
     size: usize,
     vec: Vec<T>,
@@ -21,7 +21,7 @@ pub struct Node(usize);
 fn vertex_from_index(index: usize, board_size: usize) -> Vertex {
     let x = index % board_size;
     let y = index / board_size;
-    Vertex { x: x, y: y }
+    Vertex { x, y }
 }
 
 fn index_from_vertex(vertex: Vertex, board_size: usize) -> usize {
@@ -120,7 +120,7 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
     /// Returns a new empty matrix.
     pub fn with_size(size: usize) -> Self {
         Matrix {
-            size: size,
+            size,
             vec: vec![T::default(); size * size],
         }
     }
@@ -258,7 +258,7 @@ impl<T: Clone + Debug + Default + PartialEq> From<Vec<T>> for Matrix<T> {
 
 
 /// A set of connected nodes in the matrix and their adjacencies.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Region {
     nodes: HashSet<Node>,
     adjacencies: HashSet<Node>,

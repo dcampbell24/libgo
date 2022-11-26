@@ -7,7 +7,7 @@ use std::thread;
 
 use clap::{App, Arg};
 
-static VERSION: &'static str = "0.1.0-dev";
+static VERSION: &str = "0.1.0-dev";
 
 fn main() {
     let matches = App::new("A Go Server")
@@ -35,7 +35,7 @@ fn main() {
     }
 
     if let Some(address) = matches.value_of("<host:port>") {
-        start(&address, setup_commands)
+        start(address, setup_commands)
     } else {
         start("127.0.0.1:8000", setup_commands)
     }
@@ -76,7 +76,7 @@ impl Game {
             let black_move =
                 send_command("genmove b\n", &mut self.black_connection, &mut black_reader);
             send_command(
-                &black_move.replace("=", "play b").replace("\n\n", "\n"),
+                &black_move.replace('=', "play b").replace("\n\n", "\n"),
                 &mut self.white_connection,
                 &mut white_reader,
             );
@@ -85,7 +85,7 @@ impl Game {
             let white_move =
                 send_command("genmove w\n", &mut self.white_connection, &mut white_reader);
             send_command(
-                &white_move.replace("=", "play w").replace("\n\n", "\n"),
+                &white_move.replace('=', "play w").replace("\n\n", "\n"),
                 &mut self.black_connection,
                 &mut black_reader,
             );
