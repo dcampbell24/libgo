@@ -12,7 +12,7 @@ static VERSION: &str = "0.1.0-dev";
 fn main() {
     let matches = App::new("A Go Server")
         .about(
-            "\nThis is a TCP server that listens for GTP engines\
+            "\nThis is a TCP server that listens for GTP engines \
              to connect and then plays them against each other.",
         )
         .version(VERSION)
