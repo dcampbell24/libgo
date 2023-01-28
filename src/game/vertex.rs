@@ -16,7 +16,7 @@ pub struct Vertex {
 
 impl fmt::Debug for Vertex {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self)
+        write!(f, "{self}")
     }
 }
 
@@ -27,7 +27,7 @@ impl fmt::Display for Vertex {
             .nth(self.x)
             .expect("expected char to be in GOBAN_LETTERS");
         let number = (self.y + 1).to_owned();
-        write!(f, "{}{}", letter, number)
+        write!(f, "{letter}{number}")
     }
 }
 
@@ -45,7 +45,7 @@ impl FromStr for Vertex {
             .expect("expected vertex to contain a letter");
         let x = match GOBAN_LETTERS.find(letter) {
             Some(x) => x,
-            None => return Err(format!("invalid coordinate letter {:?}", letter)),
+            None => return Err(format!("invalid coordinate letter {letter:?}")),
         };
 
         let number: String = vertex.chars().skip(1).collect();
@@ -71,7 +71,7 @@ impl fmt::Display for Vertices {
             if index == 0 {
                 write!(f, "{}", &vert)?
             } else {
-                write!(f, " {}", vert)?
+                write!(f, " {vert}")?
             }
         }
         Ok(())

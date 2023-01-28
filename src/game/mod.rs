@@ -218,8 +218,7 @@ impl Game {
             let max_handicaps = self.board.size() * self.board.size() - 1;
             if stones > max_handicaps {
                 return Err(format!(
-                    "The number of handicaps requested must be less than {}",
-                    max_handicaps
+                    "The number of handicaps requested must be less than {max_handicaps}"
                 ));
             }
         }
@@ -255,8 +254,7 @@ impl Game {
         let max_handicaps = self.board.size() * self.board.size() - 1;
         if verts.len() > max_handicaps {
             return Err(format!(
-                "The number of handicaps requested must less than {}",
-                max_handicaps
+                "The number of handicaps requested must less than {max_handicaps}"
             ));
         }
 
@@ -264,7 +262,7 @@ impl Game {
             if self.board.is_vacant(*vertex) {
                 self.board.place_stone(Player::Black, *vertex);
             } else {
-                return Err(format!("{} is not on the board", vertex));
+                return Err(format!("{vertex} is not on the board"));
             }
         }
         Ok(())

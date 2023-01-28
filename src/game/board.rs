@@ -158,8 +158,7 @@ impl Board {
     pub fn with_size(size: usize) -> Result<Self, String> {
         if !(BOARD_MIN_SIZE..=BOARD_MAX_SIZE).contains(&size) {
             Err(format!(
-                "Board size must be between {} and {}, but is {}.",
-                BOARD_MIN_SIZE, BOARD_MAX_SIZE, size
+                "Board size must be between {BOARD_MIN_SIZE} and {BOARD_MAX_SIZE}, but is {size}."
             ))
         } else {
             Ok(Board {
@@ -350,20 +349,18 @@ pub struct Move {
 
 /// The possible board states.
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Default)]
 pub enum State {
     /// A stone from second player.
     White = -1,
     /// No stone.
+    #[default]
     Empty = 0,
     /// A stone from the first player.
     Black = 1,
 }
 
-impl Default for State {
-    fn default() -> Self {
-        State::Empty
-    }
-}
+
 
 impl From<Player> for State {
     fn from(player: Player) -> Self {

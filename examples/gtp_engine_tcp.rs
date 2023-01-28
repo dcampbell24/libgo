@@ -24,11 +24,11 @@ pub fn main() {
 
     for line in BufReader::new(stream.try_clone().expect("failed to clone stream")).lines() {
         let line = line.expect("failed to read line");
-        println!("<- {}", line);
+        println!("<- {line}");
 
         if let Some(command) = Command::from_line(&line) {
             let response = gtp.exec(&mut game, &command).to_string();
-            print!("-> {}", response);
+            print!("-> {response}");
             stream
                 .write_all(response.as_bytes())
                 .expect("failed to send reply");

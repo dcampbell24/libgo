@@ -31,7 +31,7 @@ fn main() {
 
     let mut setup_commands = Vec::new();
     if let Some(size) = matches.value_of("N") {
-        setup_commands.push(format!("boardsize {}\n", size));
+        setup_commands.push(format!("boardsize {size}\n"));
     }
 
     if let Some(address) = matches.value_of("<host:port>") {
@@ -51,7 +51,7 @@ fn send_command(
     writer: &mut TcpStream,
     reader: &mut BufReader<TcpStream>,
 ) -> String {
-    print!("-> {}", command);
+    print!("-> {command}");
     writer.write_all(command.as_bytes()).unwrap();
 
     let mut reply = String::new();
@@ -102,7 +102,7 @@ impl Game {
 
 fn start(address: &str, setup_commands: Vec<String>) {
     let listener = TcpListener::bind(address).unwrap();
-    println!("listening on {} ...", address);
+    println!("listening on {address} ...");
 
     let mut players = Vec::new();
 

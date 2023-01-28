@@ -18,7 +18,7 @@ fn main() {
     for command in stdin.lock().commands() {
         let command = command.expect("failed to read command");
         let response = gtp.exec(&mut game, &command);
-        print!("{}", response);
+        print!("{response}");
 
         if command.name == "quit" {
             return;

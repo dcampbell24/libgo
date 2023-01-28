@@ -94,7 +94,7 @@ fn parse_color(color: &str) -> Result<Player, String> {
     match color.to_lowercase().as_ref() {
         "b" | "black" => Ok(Player::Black),
         "w" | "white" => Ok(Player::White),
-        _ => Err(format!("invalid color: {}", color)),
+        _ => Err(format!("invalid color: {color}")),
     }
 }
 
@@ -200,7 +200,7 @@ impl Engine {
     /// Registers non-standard commands added by David Campbell (DLC).
     pub fn register_dlc_commands(&mut self) {
         self.insert("dlc-debug_game", |_args, game| {
-            Ok(Some(format!("{:#?}", game)))
+            Ok(Some(format!("{game:#?}")))
         });
         self.insert("dlc-game_value", |_args, game| {
             Ok(Some(game.value().to_string()))
@@ -269,7 +269,7 @@ impl Engine {
 
 impl fmt::Debug for Engine {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self)
+        write!(f, "{self}")
     }
 }
 

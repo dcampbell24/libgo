@@ -19,9 +19,9 @@ impl fmt::Display for Response {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let command_id = self.id.map_or(String::new(), |id| id.to_string());
         match self.result {
-            Ok(Some(ref reply)) => write!(f, "={} {}{eol}{eol}", command_id, reply, eol = EOL),
-            Ok(None) => write!(f, "={} {eol}{eol}", command_id, eol = EOL),
-            Err(ref error) => write!(f, "?{} {}{eol}{eol}", command_id, error, eol = EOL),
+            Ok(Some(ref reply)) => write!(f, "={command_id} {reply}{EOL}{EOL}"),
+            Ok(None) => write!(f, "={command_id} {EOL}{EOL}"),
+            Err(ref error) => write!(f, "?{command_id} {error}{EOL}{EOL}"),
         }
     }
 }

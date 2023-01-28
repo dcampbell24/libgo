@@ -25,6 +25,6 @@ impl fmt::Display for Player {
             Player::Black => "black",
             Player::White => "white",
         };
-        write!(f, "{}", color)
+        write!(f, "{color}")
     }
 }
