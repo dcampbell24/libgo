@@ -85,13 +85,13 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
         vertex_from_index(node.0, self.size)
     }
 
-    /// Returns a set of all of the empty verticies on the board.
-    pub fn verts_in_state(&self, in_state: T) -> Vec<Vertex> {
+    /// Returns a set of all of the empty vertices on the board.
+    pub fn verts_in_state(&self, in_state: &T) -> Vec<Vertex> {
         self.vec
             .iter()
             .enumerate()
             .filter_map(|(index, state)| {
-                if *state == in_state {
+                if state == in_state {
                     Some(vertex_from_index(index, self.size))
                 } else {
                     None

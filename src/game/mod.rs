@@ -248,10 +248,10 @@ impl Game {
         Ok(verts)
     }
 
-    /// Places the given set of verticies as handicaps on the board. Fails if any verticies are not
-    /// on the board, the board is not empty, less than two verticies are given, or so many are
+    /// Places the given set of vertices as handicaps on the board. Fails if any vertices are not
+    /// on the board, the board is not empty, less than two vertices are given, or so many are
     /// given that placing them would commit whole board suicide.
-    pub fn set_free_handicap(&mut self, verts: HashSet<Vertex>) -> Result<(), String> {
+    pub fn set_free_handicap(&mut self, verts: &HashSet<Vertex>) -> Result<(), String> {
         if verts.len() < 2 {
             return Err("a handicap must be at least two stones".to_owned());
         }
@@ -262,7 +262,7 @@ impl Game {
             ));
         }
 
-        for vertex in &verts {
+        for vertex in verts {
             if self.board.is_vacant(*vertex) {
                 self.board.place_stone(Player::Black, *vertex);
             } else {
@@ -273,6 +273,7 @@ impl Game {
     }
 
     /// Whose turn it is to play next.
+    #[must_use]
     pub fn player_turn(&self) -> Player {
         let len = self.move_history.len();
         if len > 0 {
@@ -285,6 +286,7 @@ impl Game {
     }
 
     /// Whether the game has ended or not.
+    #[must_use]
     pub fn is_over(&self) -> bool {
         let move_count = self.move_history.len();
 

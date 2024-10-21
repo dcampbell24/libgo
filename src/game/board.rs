@@ -136,10 +136,10 @@ impl Board {
         }
     }
 
-    /// Returns a list of all the empty verticies.
+    /// Returns a list of all the empty vertices.
     #[must_use]
     pub fn empty_verts(&self) -> Vec<Vertex> {
-        self.matrix.verts_in_state(State::Empty)
+        self.matrix.verts_in_state(&State::Empty)
     }
 
     /// Returns a list of all the **unconditionally alive** chains on the board.

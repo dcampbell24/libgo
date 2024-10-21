@@ -6,7 +6,7 @@ pub struct CommandsIter<B> {
     lines: Lines<B>,
 }
 
-/// A trait extending BufRead to allow reading GTP commands from any type implementing BufRead.
+/// A trait extending `BufRead` to allow reading GTP commands from any type implementing `BufRead`.
 pub trait Commands: BufRead {
     /// A method that returns an iterator over GTP commands.
     fn commands(self) -> CommandsIter<Self>
@@ -95,6 +95,7 @@ pub struct Command {
 
 impl Command {
     /// Converts a line of input into a Command. Returns None if there was no command.
+    #[must_use]
     pub fn from_line(line: &str) -> Option<Self> {
         let mut id = None;
         let mut name = String::new();
@@ -114,7 +115,7 @@ impl Command {
                 name.push_str(command_name);
             }
 
-            let args: Vec<String> = words.map(|s| s.to_owned()).collect();
+            let args: Vec<String> = words.map(ToOwned::to_owned).collect();
 
             Command { id, name, args }
         })

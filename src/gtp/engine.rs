@@ -114,6 +114,7 @@ impl Default for Engine {
 
 impl Engine {
     /// Returns whether or not a command is in the map.
+    #[must_use]
     pub fn contains(&self, command: &Command) -> bool {
         if command.args.is_empty() {
             false
@@ -149,6 +150,7 @@ impl Engine {
     }
 
     /// Returns a new Self containing all of the GTP required commands.
+    #[must_use]
     pub fn new() -> Self {
         let mut commands = Engine {
             inner: HashMap::new(),
@@ -262,7 +264,7 @@ impl Engine {
                 return Err("syntax error, repeated vertex, or pass given as argument".to_owned());
             }
 
-            game.set_free_handicap(verts).map(|_ok| None)
+            game.set_free_handicap(&verts).map(|_ok| None)
         });
     }
 }
