@@ -28,6 +28,7 @@ impl PartialEq for Board {
 impl Board {
     /// Returns the center point (天元 tengen) of the board. Note that even size boards don't have a
     /// center point.
+    #[must_use]
     pub fn center_point(&self) -> Option<Vertex> {
         let board_size = self.size();
 
@@ -44,6 +45,7 @@ impl Board {
 
     /// Returns the edge star points (星 hoshi), which are traditionally marked with a small dot on
     /// the board.
+    #[must_use]
     pub fn star_points(&self) -> Vec<Vertex> {
         let board_size = self.size();
 
@@ -103,6 +105,7 @@ impl Board {
     /// Returns a list of handicap verticies given a board size and desired number of stones. The
     /// number of handicaps returned will be as large as possible given the number of valid
     /// handicaps, but may be less than requested.
+    #[must_use]
     pub fn fixed_handicaps(&self, stones: usize) -> Vec<Vertex> {
         let board_size = self.size();
 
@@ -110,7 +113,7 @@ impl Board {
         if board_size > 7 && (stones == 5 || stones == 7 || stones >= 9) {
             handicaps.truncate(stones - 1);
             if let Some(center) = self.center_point() {
-                handicaps.push(center)
+                handicaps.push(center);
             }
         } else {
             handicaps.truncate(stones);
@@ -119,11 +122,13 @@ impl Board {
     }
 
     /// Returns true if there are no stones on the board.
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.chains.is_empty()
     }
 
     /// Returns true if the vertex exists and is empty.
+    #[must_use]
     pub fn is_vacant(&self, vertex: Vertex) -> bool {
         match self.matrix.get(vertex) {
             Some(&state) => state == State::Empty,
@@ -132,6 +137,7 @@ impl Board {
     }
 
     /// Returns a list of all the empty verticies.
+    #[must_use]
     pub fn empty_verts(&self) -> Vec<Vertex> {
         self.matrix.verts_in_state(State::Empty)
     }
@@ -143,6 +149,7 @@ impl Board {
     ///
     /// A chain is **unconditionally alive** or **pass alive** if there is no sequence of moves
     /// solely from the opponent that can capture the chain.
+    #[must_use]
     pub fn pass_alive_chains(&self) -> Vec<Node> {
         unimplemented!();
     }

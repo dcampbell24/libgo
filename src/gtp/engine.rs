@@ -18,7 +18,7 @@ const GTP_PROTOCOL_VERSION: &str = "2";
 /// The official name of the agent.
 const PROGRAM_NAME: &str = env!("CARGO_PKG_NAME");
 
-fn gtp_boardsize(args: &Vec<String>, game: &mut Game) -> CommandResult {
+fn gtp_boardsize(args: &[String], game: &mut Game) -> CommandResult {
     if args.is_empty() {
         return Err("boardsize not given".to_owned());
     }
@@ -35,7 +35,7 @@ fn gtp_boardsize(args: &Vec<String>, game: &mut Game) -> CommandResult {
     }
 }
 
-fn gtp_genmove(args: &Vec<String>, game: &mut Game) -> CommandResult {
+fn gtp_genmove(args: &[String], game: &mut Game) -> CommandResult {
     if args.is_empty() {
         return Err("too few arguments, expected: genmove <color>".to_owned());
     }
@@ -48,7 +48,7 @@ fn gtp_genmove(args: &Vec<String>, game: &mut Game) -> CommandResult {
     Ok(Some(move_str))
 }
 
-fn gtp_place_handicap(args: &Vec<String>, game: &mut Game, handicap: Handicap) -> CommandResult {
+fn gtp_place_handicap(args: &[String], game: &mut Game, handicap: Handicap) -> CommandResult {
     if args.is_empty() {
         return Err("syntax error".to_owned());
     }
@@ -62,7 +62,7 @@ fn gtp_place_handicap(args: &Vec<String>, game: &mut Game, handicap: Handicap) -
         .map(|verts| Some(Vertices(verts).to_string()))
 }
 
-fn gtp_play(args: &Vec<String>, game: &mut Game) -> CommandResult {
+fn gtp_play(args: &[String], game: &mut Game) -> CommandResult {
     if args.len() < 2 {
         return Err("too few arguments, expected: <color> <vertex>".to_owned());
     }
@@ -154,12 +154,16 @@ impl Engine {
             inner: HashMap::new(),
         };
 
-        commands.insert("boardsize", gtp_boardsize);
+        commands.insert("boardsize", |args, game| {
+            gtp_boardsize(args, game)
+        });
         commands.insert("clear_board", |_args, game| {
             game.clear_board();
             Ok(None)
         });
-        commands.insert("genmove", gtp_genmove);
+        commands.insert("genmove", |args, game| {
+            gtp_genmove(args, game)
+        });
         commands.insert("known_command", |_args, _game| {
             unreachable!();
         });
@@ -233,7 +237,9 @@ impl Engine {
             game.kgs_game_over = true;
             Ok(None)
         });
-        self.insert("kgs-genmove_cleanup", gtp_genmove);
+        self.insert("kgs-genmove_cleanup", |args, game| {
+            gtp_genmove(args, game)
+        });
         // kgs-rules
         // kgs-time_settings
     }

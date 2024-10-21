@@ -69,9 +69,9 @@ impl fmt::Display for Vertices {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for (index, vert) in self.0.iter().enumerate() {
             if index == 0 {
-                write!(f, "{}", &vert)?
+                write!(f, "{}", &vert)?;
             } else {
-                write!(f, " {vert}")?
+                write!(f, " {vert}")?;
             }
         }
         Ok(())
