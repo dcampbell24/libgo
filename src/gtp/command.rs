@@ -46,9 +46,9 @@ impl<T: BufRead> Commands for T {}
 //     When a command string arrives to an engine, it is expected to perform the
 //     following four operations before any further parsing takes place:
 //
-//     1. Remove all occurences of CR and other control characters except for HT and LF.
+//     1. Remove all occurrences of CR and other control characters except for HT and LF.
 //     2. For each line with a hash sign (#), remove all text following and including this character.
-//     3. Convert all occurences of HT to SPACE.
+//     3. Convert all occurrences of HT to SPACE.
 //     4. Discard any empty or white-space only lines.
 //
 //     When a response arrives to a controller, it is expected only to do steps 1 and 3 above.
