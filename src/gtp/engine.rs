@@ -2,12 +2,12 @@ use std::collections::{HashMap, HashSet};
 use std::fmt;
 use std::str::FromStr;
 
-use game::board::Move;
-use game::player::Player;
-use game::vertex::{Vertex, Vertices};
-use game::{Game, Handicap};
-use gtp::command::Command;
-use gtp::response::{CommandResult, Response};
+use crate::game::board::Move;
+use crate::game::player::Player;
+use crate::game::vertex::{Vertex, Vertices};
+use crate::game::{Game, Handicap};
+use crate::gtp::command::Command;
+use crate::gtp::response::{CommandResult, Response};
 
 /// The library version.
 pub const AGENT_VERSION: &str = env!("CARGO_PKG_VERSION");

@@ -14,9 +14,9 @@ pub mod vertex;
 use rand::{self, Rng};
 use std::collections::HashSet;
 
-use game::board::{Board, Move};
-use game::player::Player;
-use game::vertex::Vertex;
+use crate::game::board::{Board, Move};
+use crate::game::player::Player;
+use crate::game::vertex::Vertex;
 
 /// The compensation in points White gets for going second under Chinese rules.
 pub const CHINESE_KOMI: f64 = 7.5;

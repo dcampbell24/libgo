@@ -1,9 +1,9 @@
 use std::collections::HashSet;
 use std::fmt;
 
-use game::matrix::{Matrix, Node};
-use game::player::Player;
-use game::vertex::Vertex;
+use crate::game::matrix::{Matrix, Node};
+use crate::game::player::Player;
+use crate::game::vertex::Vertex;
 
 const BOARD_MAX_SIZE: usize = 19;
 const BOARD_MIN_SIZE: usize = 1;
@@ -348,8 +348,7 @@ pub struct Move {
 }
 
 /// The possible board states.
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-#[derive(Default)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, Default)]
 pub enum State {
     /// A stone from second player.
     White = -1,
@@ -359,8 +358,6 @@ pub enum State {
     /// A stone from the first player.
     Black = 1,
 }
-
-
 
 impl From<Player> for State {
     fn from(player: Player) -> Self {

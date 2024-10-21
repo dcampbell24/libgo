@@ -5,7 +5,7 @@ use std::fmt::Debug;
 use std::ops::{Index, IndexMut};
 use std::slice;
 
-use game::vertex::Vertex;
+use crate::game::vertex::Vertex;
 
 /// A matrix holding the state of type T for each vertex on the board.
 #[derive(Clone, Debug, PartialEq, Eq)]
