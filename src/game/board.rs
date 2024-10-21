@@ -200,7 +200,7 @@ impl Board {
     /// Removes all enemy Chains from the board that have 0 liberties.
     fn remove_captures(&mut self, capturer: Player) {
         let empty_nodes = self.remove_dead_chains(capturer.enemy());
-        for n in empty_nodes.into_iter() {
+        for n in empty_nodes {
             self.matrix[n] = State::Empty;
         }
     }
@@ -215,11 +215,13 @@ impl Board {
     }
 
     /// Returns the current size of the board.
+    #[must_use]
     pub fn size(&self) -> usize {
         self.matrix.size()
     }
 
     /// The score according to ancient rules (count of black stones minus count of white stones).
+    #[must_use]
     pub fn score_ancient(&self) -> i32 {
         self.matrix.values().fold(0, |acc, &state| match state {
             State::Empty => acc,
@@ -229,6 +231,7 @@ impl Board {
     }
 
     /// Returns a human readable ASCII representation of the board.
+    #[must_use]
     pub fn to_ascii(&self) -> String {
         let size = self.size();
         let star_points = self.star_points();
@@ -269,7 +272,7 @@ impl Board {
         let mut adjacent_chains = Vec::new();
 
         verts.insert(node);
-        for node in self.matrix.adjacencies(node).into_iter() {
+        for node in self.matrix.adjacencies(node) {
             let state = self.matrix[node];
             if state == State::Empty {
                 libs.insert(node);
@@ -287,7 +290,7 @@ impl Board {
             filled_libs,
         };
 
-        for node in adjacent_chains.into_iter() {
+        for node in adjacent_chains {
             if let Some(old_chain) = self.remove_chain(node) {
                 chain.eat(old_chain);
             }

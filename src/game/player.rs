@@ -10,7 +10,8 @@ pub enum Player {
 }
 
 impl Player {
-    /// The opponenet or enemy of the player.
+    /// The opponent or enemy of the player.
+    #[must_use]
     pub fn enemy(&self) -> Self {
         match *self {
             Player::White => Player::Black,

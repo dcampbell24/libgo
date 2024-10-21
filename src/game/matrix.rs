@@ -30,6 +30,7 @@ fn index_from_vertex(vertex: Vertex, board_size: usize) -> usize {
 
 impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
     /// Returns the node above _node_ if it exists.
+    #[must_use]
     pub fn above(&self, node: Node) -> Option<Node> {
         if node.0 + self.size < self.size * self.size {
             Some(Node(node.0 + self.size))
@@ -39,6 +40,7 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
     }
 
     /// Returns the node below _node_ if it exists.
+    #[must_use]
     pub fn below(&self, node: Node) -> Option<Node> {
         if node.0 >= self.size {
             Some(Node(node.0 - self.size))
@@ -48,6 +50,7 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
     }
 
     /// Returns the node left of _node_ if it exists.
+    #[must_use]
     pub fn left_of(&self, node: Node) -> Option<Node> {
         if node.0 % self.size > 0 {
             Some(Node(node.0 - 1))
@@ -57,6 +60,7 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
     }
 
     /// Returns the node right of _node_ if it exists.
+    #[must_use]
     pub fn right_of(&self, node: Node) -> Option<Node> {
         if (node.0 + 1) % self.size > 0 {
             Some(Node(node.0 + 1))
@@ -66,6 +70,7 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
     }
 
     /// Converts a vertex into node in the matrix. Returns None if the vertex is not in the matrix.
+    #[must_use]
     pub fn node_from_vertex(&self, vertex: Vertex) -> Option<Node> {
         if vertex.x < self.size && vertex.y < self.size {
             Some(Node(index_from_vertex(vertex, self.size)))
@@ -75,6 +80,7 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
     }
 
     /// Returns the vertex of a node.
+    #[must_use]
     pub fn vertex_from_node(&self, node: Node) -> Vertex {
         vertex_from_index(node.0, self.size)
     }
@@ -95,6 +101,7 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
     }
 
     /// Returns all nodes adjacent to node.
+    #[must_use]
     pub fn adjacencies(&self, node: Node) -> Vec<Node> {
         let mut adjacencies = Vec::with_capacity(4);
 
@@ -115,11 +122,13 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
     }
 
     /// Returns the cell state at a given vertex or none if the vertex is not in the matrix.
+    #[must_use]
     pub fn get(&self, vertex: Vertex) -> Option<&T> {
         self.vec.get(index_from_vertex(vertex, self.size))
     }
 
     /// Returns a new empty matrix.
+    #[must_use]
     pub fn with_size(size: usize) -> Self {
         Matrix {
             size,
@@ -128,6 +137,7 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
     }
 
     /// Returns the matrix size.
+    #[must_use]
     pub fn size(&self) -> usize {
         self.size
     }
@@ -184,13 +194,14 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
                 for n in &region.nodes {
                     visited[n.0] = true;
                 }
-                regions.push(region)
+                regions.push(region);
             }
         }
         regions
     }
 
     /// Returns all of the largest connected regions of verticies that are equal to each other.
+    #[must_use]
     pub fn get_regions_by_value(&self) -> Vec<Region> {
         let mut visited = vec![false; self.size * self.size];
         let mut regions = Vec::new();
@@ -205,7 +216,7 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
             for n in &region.nodes {
                 visited[n.0] = true;
             }
-            regions.push(region)
+            regions.push(region);
         }
         regions
     }
@@ -269,6 +280,7 @@ pub struct Region {
 
 impl Region {
     /// Returns an iterator over all of the nodes in the region.
+    #[must_use]
     pub fn nodes(&self) -> hash_set::Iter<Node> {
         self.nodes.iter()
     }

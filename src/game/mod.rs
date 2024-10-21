@@ -65,6 +65,7 @@ impl Default for Game {
 
 impl Game {
     /// Returns a shared reference to the game board.
+    #[must_use]
     pub fn board(&self) -> &Board {
         &self.board
     }
@@ -88,7 +89,7 @@ impl Game {
                 vertex: Some(possible_moves[index]),
             };
             match self.play(&mov) {
-                Ok(_) => {
+                Ok(()) => {
                     return mov;
                 }
                 Err(_) => {
@@ -106,6 +107,7 @@ impl Game {
     }
 
     /// Returns a vector containing all of the legal moves for a player.
+    #[must_use]
     pub fn all_legal_moves(&self, player: Player) -> Vec<Vertex> {
         let mut legal_moves = Vec::new();
         for vertex in self.board.empty_verts() {
@@ -122,6 +124,7 @@ impl Game {
     /// Returns the difference in moves left for each player. Positive values mean Black is ahead.
     /// This may be extened to surreal numbers and combintorial game values to give a more precise
     /// description of the state of the game.
+    #[must_use]
     pub fn value(&self) -> i32 {
         self.all_legal_moves(Player::Black).len() as i32
             - self.all_legal_moves(Player::White).len() as i32
@@ -141,6 +144,7 @@ impl Game {
     }
 
     /// Returns a new game with the default board size.
+    #[must_use]
     pub fn new() -> Self {
         Game::with_board_size(DEFAULT_BOARD_SIZE).unwrap()
     }
