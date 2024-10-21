@@ -265,6 +265,10 @@ impl<T: Clone + Debug + Default + PartialEq> IndexMut<Node> for Matrix<T> {
 }
 
 impl<T: Clone + Debug + Default + PartialEq> From<Vec<T>> for Matrix<T> {
+    // size is between 1² and 19² .
+    #[allow(clippy::cast_possible_truncation)]
+    #[allow(clippy::cast_sign_loss)]
+    #[allow(clippy::cast_precision_loss)]
     fn from(vec: Vec<T>) -> Self {
         let size = (vec.len() as f64).sqrt() as usize;
         Matrix { size, vec }
