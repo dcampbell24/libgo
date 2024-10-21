@@ -1,0 +1,3 @@
+#!/bin/sh
+cargo +stable clippy # -- --warn clippy::pedantic
+cargo +stable fmt --all --check
