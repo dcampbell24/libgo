@@ -1,44 +1,36 @@
-extern crate clap;
-
 use std::io::prelude::*;
 use std::io::BufReader;
 use std::net::{Shutdown, TcpListener, TcpStream};
 use std::thread;
 
-use clap::{App, Arg};
+use clap::{self, Parser};
 
-static VERSION: &str = "0.1.0-dev";
+/// A Go Server
+///
+/// This is a TCP server that listens for GTP engines
+/// to connect and then plays them against each other.
+#[derive(Parser, Debug)]
+#[command(version, about)]
+struct Args {
+    /// Listen for GTP drivers on host and port
+    #[arg(default_value = "127.0.0.1:8000", index = 1, value_name = "host:port")]
+    host_port:  String,
+
+    /// Send 'boardsize BOARD_SIZE' to clients
+    #[arg(long)]
+    board_size: Option<u8>,
+}
+
 
 fn main() {
-    let matches = App::new("A Go Server")
-        .about(
-            "\nThis is a TCP server that listens for GTP engines \
-             to connect and then plays them against each other.",
-        )
-        .version(VERSION)
-        .arg(
-            Arg::with_name("<host:port>")
-                .index(1)
-                .help("Listen for GTP drivers on host and port"),
-        )
-        .arg(
-            Arg::with_name("N")
-                .long("boardsize")
-                .takes_value(true)
-                .help("Send 'boardsize N' to clients"),
-        )
-        .get_matches();
+    let args = Args::parse();
 
     let mut setup_commands = Vec::new();
-    if let Some(size) = matches.value_of("N") {
+    if let Some(size) = args.board_size {
         setup_commands.push(format!("boardsize {size}\n"));
     }
 
-    if let Some(address) = matches.value_of("<host:port>") {
-        start(address, setup_commands)
-    } else {
-        start("127.0.0.1:8000", setup_commands)
-    }
+    start(&args.host_port, setup_commands)
 }
 
 struct Game {
