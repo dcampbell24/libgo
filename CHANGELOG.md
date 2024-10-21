@@ -11,6 +11,7 @@
 - Fix lints.
 - Store cargo.lock in version control.
 - Update the license.
+- Switch to criterion for benchmarks.
 
 ## [0.4.0](https://crates.io/crates/libgo/0.4.0)
 
