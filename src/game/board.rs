@@ -162,25 +162,33 @@ impl Board {
 
     /// Creates a new board with the given size. A full size game is 19, but 13 and 9 are also
     /// common. Returns None if the board size is not supported.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the board size is not between 1 and 19 inclusive.
     pub fn with_size(size: usize) -> Result<Self, String> {
-        if !(BOARD_MIN_SIZE..=BOARD_MAX_SIZE).contains(&size) {
-            Err(format!(
-                "Board size must be between {BOARD_MIN_SIZE} and {BOARD_MAX_SIZE}, but is {size}."
-            ))
-        } else {
+        if (BOARD_MIN_SIZE..=BOARD_MAX_SIZE).contains(&size) {
             Ok(Board {
                 matrix: Matrix::with_size(size),
                 chains: Vec::new(),
             })
+        } else {
+            Err(format!(
+                "Board size must be between {BOARD_MIN_SIZE} and {BOARD_MAX_SIZE}, but is {size}."
+            ))
         }
     }
 
     /// Updates the board with a move. The move is assumed to be valid and legal.
+    ///
+    /// # Panics
+    ///
+    /// If the vertex is illegal.
     pub fn place_stone(&mut self, player: Player, vertex: Vertex) {
         let node = self
             .matrix
             .node_from_vertex(vertex)
-            .expect("invlaid vertex");
+            .expect("invalid vertex");
         self.matrix[node] = State::from(player);
 
         // Remove the liberty from chains on the board.

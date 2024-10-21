@@ -78,6 +78,9 @@ impl Game {
     }
 
     /// Picks a move uniform randomly from all the the possible legal moves.
+    ///
+    /// # Panics
+    /// Failed to pass, programming error.
     pub fn genmove_random(&mut self, player: Player) -> Move {
         let mut possible_moves = self.board.empty_verts();
         let mut rng = rand::thread_rng();
@@ -122,15 +125,20 @@ impl Game {
     }
 
     /// Returns the difference in moves left for each player. Positive values mean Black is ahead.
-    /// This may be extened to surreal numbers and combintorial game values to give a more precise
+    /// This may be extended to surreal numbers and combinatorial game values to give a more precise
     /// description of the state of the game.
+    #[allow(clippy::missing_panics_doc)]
     #[must_use]
     pub fn value(&self) -> i32 {
-        self.all_legal_moves(Player::Black).len() as i32
-            - self.all_legal_moves(Player::White).len() as i32
+        i32::try_from(self.all_legal_moves(Player::Black).len()).unwrap()
+            - i32::try_from(self.all_legal_moves(Player::White).len()).unwrap()
     }
 
-    /// Returns a new game with the given board size if the board size is supported, else None.
+    /// Returns a new game with the given board size.
+    ///
+    /// # Errors
+    ///
+    /// If the board size is not supported.
     pub fn with_board_size(board_size: usize) -> Result<Self, String> {
         Board::with_size(board_size).map(|board| Game {
             board,
@@ -144,6 +152,7 @@ impl Game {
     }
 
     /// Returns a new game with the default board size.
+    #[allow(clippy::missing_panics_doc)]
     #[must_use]
     pub fn new() -> Self {
         Game::with_board_size(DEFAULT_BOARD_SIZE).unwrap()
@@ -161,7 +170,7 @@ impl Game {
             test_board.place_stone(mov.player, vertex);
             match self.rule_set {
                 RuleSet::Chinese => {
-                    // Check if the move commited suicide.
+                    // Check if the move committed suicide.
                     if test_board.is_vacant(vertex) {
                         return false;
                     }
@@ -177,9 +186,11 @@ impl Game {
         true
     }
 
-    /// Atempts to play a move.
+    /// Attempts to play a move.
     ///
-    /// Returns Ok(()) if the move is legal, otherwise an error String.
+    /// # Errors
+    ///
+    /// The move is illegal.
     pub fn play(&mut self, mov: &Move) -> Result<(), String> {
         if !self.is_legal_move(mov) {
             return Err("illegal move".to_owned());
@@ -194,7 +205,12 @@ impl Game {
         Ok(())
     }
 
-    /// Undo the last move. Fails if there are no moves to undo.
+    /// Undo the last move.
+    ///
+    /// # Errors
+    ///
+    /// Fails if there are no moves to undo.
+    #[allow(clippy::missing_panics_doc)]
     pub fn undo(&mut self) -> Result<(), String> {
         match self.move_history.pop() {
             Some(mov) => {
@@ -208,7 +224,11 @@ impl Game {
     }
 
     /// Places handicap stones in fixed locations based on the number requested and the size of
-    /// the board. Fails if the board is empty or an invalid number of stones are requested.
+    /// the board.
+    ///
+    /// # Errors
+    ///
+    /// Fails if the board is not empty or an invalid number of stones are requested.
     pub fn place_handicap(
         &mut self,
         stones: usize,
@@ -248,9 +268,13 @@ impl Game {
         Ok(verts)
     }
 
-    /// Places the given set of vertices as handicaps on the board. Fails if any vertices are not
-    /// on the board, the board is not empty, less than two vertices are given, or so many are
-    /// given that placing them would commit whole board suicide.
+    /// Places the given set of vertices as handicaps on the board.
+    ///
+    /// # Errors
+    ///
+    /// Fails if any vertices are not on the board, the board is not empty,
+    /// less than two vertices are given, or so many are given that placing
+    /// them would commit whole board suicide.
     pub fn set_free_handicap(&mut self, verts: &HashSet<Vertex>) -> Result<(), String> {
         if verts.len() < 2 {
             return Err("a handicap must be at least two stones".to_owned());
