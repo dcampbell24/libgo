@@ -154,16 +154,12 @@ impl Engine {
             inner: HashMap::new(),
         };
 
-        commands.insert("boardsize", |args, game| {
-            gtp_boardsize(args, game)
-        });
+        commands.insert("boardsize", |args, game| gtp_boardsize(args, game));
         commands.insert("clear_board", |_args, game| {
             game.clear_board();
             Ok(None)
         });
-        commands.insert("genmove", |args, game| {
-            gtp_genmove(args, game)
-        });
+        commands.insert("genmove", |args, game| gtp_genmove(args, game));
         commands.insert("known_command", |_args, _game| {
             unreachable!();
         });
@@ -237,9 +233,7 @@ impl Engine {
             game.kgs_game_over = true;
             Ok(None)
         });
-        self.insert("kgs-genmove_cleanup", |args, game| {
-            gtp_genmove(args, game)
-        });
+        self.insert("kgs-genmove_cleanup", |args, game| gtp_genmove(args, game));
         // kgs-rules
         // kgs-time_settings
     }

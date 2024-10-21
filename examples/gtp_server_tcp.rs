@@ -14,13 +14,12 @@ use clap::{self, Parser};
 struct Args {
     /// Listen for GTP drivers on host and port
     #[arg(default_value = "127.0.0.1:8000", index = 1, value_name = "host:port")]
-    host_port:  String,
+    host_port: String,
 
     /// Send 'boardsize BOARD_SIZE' to clients
     #[arg(long)]
     board_size: Option<u8>,
 }
-
 
 fn main() {
     let args = Args::parse();
