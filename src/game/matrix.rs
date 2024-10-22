@@ -265,7 +265,7 @@ impl<T: Clone + Debug + Default + PartialEq> IndexMut<Node> for Matrix<T> {
 }
 
 impl<T: Clone + Debug + Default + PartialEq> From<Vec<T>> for Matrix<T> {
-    // size is between 1² and 19² .
+    // Fixme: when isqrt is stabilized switch to that.
     #[allow(clippy::cast_possible_truncation)]
     #[allow(clippy::cast_sign_loss)]
     #[allow(clippy::cast_precision_loss)]
