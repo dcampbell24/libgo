@@ -102,7 +102,7 @@ impl Board {
         star_points
     }
 
-    /// Returns a list of handicap verticies given a board size and desired number of stones. The
+    /// Returns a list of handicap vertices given a board size and desired number of stones. The
     /// number of handicaps returned will be as large as possible given the number of valid
     /// handicaps, but may be less than requested.
     #[must_use]
