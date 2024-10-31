@@ -124,8 +124,6 @@ impl Command {
 
 #[cfg(test)]
 mod tests {
-    use std::u32;
-
     use super::*;
 
     #[test]
@@ -169,7 +167,7 @@ mod tests {
         );
 
         // If a number is given that is not a u32, it will be treated as a command name.
-        let large_uint = (u32::MAX as u64 + 1).to_string();
+        let large_uint = (u64::from(u32::MAX) + 1).to_string();
         assert_eq!(
             Command::from_line(&large_uint),
             Some(Command {

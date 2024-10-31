@@ -43,9 +43,9 @@ impl FromStr for Vertex {
             .chars()
             .next()
             .expect("expected vertex to contain a letter");
-        let x = match GOBAN_LETTERS.find(letter) {
-            Some(x) => x,
-            None => return Err(format!("invalid coordinate letter {letter:?}")),
+
+        let Some(x) = GOBAN_LETTERS.find(letter) else {
+            return Err(format!("invalid coordinate letter {letter:?}"));
         };
 
         let number: String = vertex.chars().skip(1).collect();

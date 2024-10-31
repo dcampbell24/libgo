@@ -16,7 +16,7 @@ struct Args {
     #[arg(default_value = "127.0.0.1:8000", index = 1, value_name = "host:port")]
     host_port: String,
 
-    /// Send 'boardsize BOARD_SIZE' to clients
+    /// Send 'boardsize `BOARD_SIZE`' to clients
     #[arg(long)]
     board_size: Option<u8>,
 }
@@ -29,7 +29,7 @@ fn main() {
         setup_commands.push(format!("boardsize {size}\n"));
     }
 
-    start(&args.host_port, setup_commands)
+    start(&args.host_port, &setup_commands);
 }
 
 struct Game {
@@ -91,7 +91,7 @@ impl Game {
     }
 }
 
-fn start(address: &str, setup_commands: Vec<String>) {
+fn start(address: &str, setup_commands: &[String]) {
     let listener = TcpListener::bind(address).unwrap();
     println!("listening on {address} ...");
 
@@ -107,9 +107,9 @@ fn start(address: &str, setup_commands: Vec<String>) {
                         black_connection: players.pop().unwrap(),
                         white_connection: stream,
                     };
-                    let setup_commands = setup_commands.clone();
+                    let setup_commands = setup_commands.to_owned();
                     thread::spawn(move || {
-                        game.start(setup_commands);
+                        game.start(setup_commands.clone());
                     });
                 }
             }

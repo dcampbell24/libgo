@@ -3,7 +3,7 @@ name = "libgo"
 version = "0.5.0"
 authors = ["David Campbell <dcampbell24@gmail.com>"]
 edition = "2021"
-rust-version = "1.62.1"
+rust-version = "1.82"
 
 description = "Basic Go library that implements the Go Text Protocol."
 repository = "https://github.com/dcampbell24/libgo"
@@ -18,6 +18,12 @@ rand = "0.8"
 [dev-dependencies]
 clap = { version = "4", features = ["derive"] }
 criterion = { version = "0.5", features = ["html_reports"] }
+
+[lints.clippy]
+cargo = "warn"
+pedantic = "warn"
+
+multiple_crate_versions = { level = "allow", priority = 1 }
 
 [[bench]]
 name = "benchmarks"
