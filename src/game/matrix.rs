@@ -229,7 +229,7 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
     }
 
     /// Returns all of the values stored in the Matrix.
-    pub fn values(&self) -> slice::Iter<T> {
+    pub fn values(&self) -> slice::Iter<'_, T> {
         self.vec.iter()
     }
 }
@@ -285,7 +285,7 @@ pub struct Region {
 impl Region {
     /// Returns an iterator over all of the nodes in the region.
     #[must_use]
-    pub fn nodes(&self) -> hash_set::Iter<Node> {
+    pub fn nodes(&self) -> hash_set::Iter<'_, Node> {
         self.nodes.iter()
     }
 }
