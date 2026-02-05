@@ -265,7 +265,7 @@ impl Board {
                 };
                 board.push(c);
             }
-            board.push_str(&format!(" {:02}\r\n", y + 1));
+            write!(board, " {:02}\r\n", y + 1).unwrap();
         }
         self.push_letters(&mut board);
         board
