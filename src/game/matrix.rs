@@ -234,7 +234,7 @@ impl<T: Clone + Debug + Default + PartialEq> Matrix<T> {
     }
 }
 
-impl<'a, T: Clone + Debug + Default + PartialEq> Index<&'a Vertex> for Matrix<T> {
+impl<T: Clone + Debug + Default + PartialEq> Index<&Vertex> for Matrix<T> {
     type Output = T;
     fn index(&self, vertex: &Vertex) -> &Self::Output {
         self.vec
@@ -250,7 +250,7 @@ impl<T: Clone + Debug + Default + PartialEq> Index<Node> for Matrix<T> {
     }
 }
 
-impl<'a, T: Clone + Debug + Default + PartialEq> IndexMut<&'a Vertex> for Matrix<T> {
+impl<T: Clone + Debug + Default + PartialEq> IndexMut<&Vertex> for Matrix<T> {
     fn index_mut(&mut self, vertex: &Vertex) -> &mut T {
         self.vec
             .get_mut(index_from_vertex(*vertex, self.size))
