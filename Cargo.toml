@@ -3,7 +3,6 @@ name = "libgo"
 version = "0.5.0"
 edition = "2021"
 rust-version = "1.65"
-
 description = "Basic Go library that implements the Go Text Protocol."
 repository = "https://github.com/dcampbell24/libgo"
 readme = "README.md"
