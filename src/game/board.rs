@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 use std::fmt;
+use std::fmt::Write;
 
 use crate::game::matrix::{Matrix, Node};
 use crate::game::player::Player;
@@ -247,7 +248,7 @@ impl Board {
         self.push_letters(&mut board);
         board.push_str("\r\n");
         for y in (0..size).rev() {
-            board.push_str(&format!("{:02}", y + 1));
+            write!(board, "{:02}", y + 1).unwrap();
             for x in 0..size {
                 board.push(' ');
                 let vertex = Vertex { x, y };
